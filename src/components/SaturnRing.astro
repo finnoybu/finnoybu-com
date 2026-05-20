@@ -24,10 +24,13 @@ const { projects } = Astro.props;
 
     {/* the planet */}
     <div class="saturn-planet">
-      <img src="/portrait.png" alt="Kenneth Tannenbaum" onerror="this.remove()" />
-      <div class="saturn-planet__placeholder" aria-hidden="true">
-        <span>KT</span>
-      </div>
+      <div class="saturn-planet__sphere" aria-hidden="true"></div>
+      <img
+        class="saturn-planet__photo"
+        src="/portrait.png"
+        alt="Kenneth Tannenbaum"
+        onerror="this.remove()"
+      />
     </div>
 
     {/* ring band — front half (clipped, in front of the portrait) */}
@@ -59,12 +62,16 @@ const { projects } = Astro.props;
     <p class="saturn-detail__tag" id="detailTag"></p>
     <h2 class="saturn-detail__name" id="detailName"></h2>
     <p class="saturn-detail__blurb" id="detailBlurb"></p>
-    <a class="saturn-detail__link" id="detailLink" href="#" rel="noopener">
+    <a
+      class="saturn-detail__link"
+      id="detailLink"
+      href="#"
+      target="_blank"
+      rel="noopener"
+    >
       Visit&nbsp;&rarr;
     </a>
   </div>
-
-  <p class="saturn-hint">drag the ring &middot; click an icon &middot; &larr;&nbsp;&rarr;&nbsp;arrow keys</p>
 </div>
 
 {/* Static fallback — reduced-motion, narrow screens, no-JS. */}
@@ -209,7 +216,7 @@ const { projects } = Astro.props;
           target = null;
         }
       } else if (!pointerInside && !reduced) {
-        spin -= 0.0021; // idle drift — slow, reversed
+        spin -= 0.0014; // idle drift — slow, reversed
       }
       place();
       refreshActive();
@@ -241,7 +248,7 @@ const { projects } = Astro.props;
       if (!dragging) return;
       const dx = e.clientX - startX;
       if (Math.abs(dx) > moved) moved = Math.abs(dx);
-      spin = startSpin + dx * 0.006;
+      spin = startSpin - dx * 0.006; // ring follows the hand
     });
     const endDrag = () => {
       if (!dragging) return;
@@ -253,8 +260,13 @@ const { projects } = Astro.props;
 
     nodes.forEach((node, i) => {
       node.addEventListener('click', () => {
-        if (moved > 6) return;
-        snapTo(i);
+        if (moved > 6) return; // was a drag
+        if (i === active) {
+          const url = node.dataset.url;
+          if (url) window.open(url, '_blank', 'noopener');
+        } else {
+          snapTo(i);
+        }
       });
     });
 

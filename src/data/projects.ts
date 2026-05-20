@@ -81,6 +81,7 @@ export const PROJECTS: Project[] = [
     tag: 'Civic',
     blurb:
       'Civic research and action — briefs that name the stakes, letters constituents can actually send, and a public record of how their representatives vote.',
+    url: 'https://github.com/finnoybu/americansforpropriety',
   },
   {
     id: 'mskosman',
@@ -98,5 +99,6 @@ export const PROJECTS: Project[] = [
     tag: 'Personal',
     blurb:
       'A small site, hand-built and held in trust for one specific person until they are ready for it.',
+    url: 'https://wilohwisp.com',
   },
 ];
