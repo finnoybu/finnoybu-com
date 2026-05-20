@@ -7,7 +7,8 @@ export interface Project {
   name: string;
   monogram: string; // 1–2 char mark shown on the icon disc
   tag: string; // short category label
-  blurb: string;
+  blurb: string; // one-liner shown on the ring's detail panel
+  details?: string; // longer write-up shown in the project detail view
   url?: string;
 }
 

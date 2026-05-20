@@ -269,6 +269,94 @@ a { color: inherit; }
   transition: opacity 0.18s ease;
 }
 
+/* ── Project detail view — overlays the receded ring ────────── */
+.saturn-stage-wrap {
+  position: relative;
+}
+.saturn-stage-wrap .saturn-scene,
+.saturn-stage-wrap .saturn-detail {
+  transition: opacity 0.5s ease, transform 0.5s ease, filter 0.5s ease;
+}
+.saturn-stage-wrap.is-detail .saturn-scene,
+.saturn-stage-wrap.is-detail .saturn-detail {
+  opacity: 0.12;
+  transform: scale(0.9);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.project-detail {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.5rem 1.25rem 2rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease,
+    visibility 0s linear 0.5s;
+  overflow-y: auto;
+}
+.saturn-stage-wrap.is-detail .project-detail {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition: opacity 0.5s ease, transform 0.5s ease, visibility 0s;
+}
+.project-detail__back {
+  background: none;
+  border: 1px solid var(--rule);
+  color: var(--ink-muted);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.project-detail__back:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.project-detail__tag {
+  margin: 1.6rem 0 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.project-detail__name {
+  margin: 0.5rem 0 0;
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: clamp(2rem, 4.6vw, 3rem);
+  line-height: 1.1;
+  color: var(--ink);
+}
+.project-detail__body {
+  margin: 1.15rem auto 0;
+  max-width: 40rem;
+  font-size: 1.04rem;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+.project-detail__visit {
+  margin-top: 1.6rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--accent-hi);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(127, 182, 236, 0.4);
+  padding-bottom: 2px;
+}
+.project-detail__visit:hover { border-color: var(--accent-hi); }
+.project-detail__visit[hidden] { display: none; }
+
 /* ═══════════════════════════════════════════════════════════
    STATIC FALLBACK GRID — reduced-motion, no-JS, narrow screens.
    ═══════════════════════════════════════════════════════════ */

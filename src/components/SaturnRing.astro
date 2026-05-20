@@ -58,6 +58,7 @@ const { projects } = Astro.props;
           data-name={p.name}
           data-tag={p.tag}
           data-blurb={p.blurb}
+          data-details={p.details ?? ''}
           data-url={p.url ?? ''}
         >
           <div class="saturn-node__disc">{p.monogram}</div>
@@ -71,6 +72,22 @@ const { projects } = Astro.props;
     <p class="saturn-detail__tag" id="detailTag"></p>
     <h2 class="saturn-detail__name" id="detailName"></h2>
     <p class="saturn-detail__blurb" id="detailBlurb"></p>
+  </div>
+
+  {/* expanded project view — overlays the faded ring */}
+  <div class="project-detail" id="projectDetail" aria-hidden="true">
+    <button class="project-detail__back" id="detailBack" type="button">
+      &larr;&nbsp;Back to the system
+    </button>
+    <p class="project-detail__tag" id="pdTag"></p>
+    <h2 class="project-detail__name" id="pdName"></h2>
+    <div class="project-detail__body" id="pdBody"></div>
+    <a
+      class="project-detail__visit"
+      id="pdVisit"
+      target="_blank"
+      rel="noopener"
+    ></a>
   </div>
 </div>
 
@@ -96,10 +113,19 @@ const { projects } = Astro.props;
   const dTag = document.getElementById('detailTag');
   const dName = document.getElementById('detailName');
   const dBlurb = document.getElementById('detailBlurb');
+  const stage = document.querySelector<HTMLElement>('.saturn-stage-wrap');
+  const projectDetail = document.getElementById('projectDetail');
+  const detailBack = document.getElementById('detailBack');
+  const pdTag = document.getElementById('pdTag');
+  const pdName = document.getElementById('pdName');
+  const pdBody = document.getElementById('pdBody');
+  const pdVisit = document.getElementById('pdVisit');
 
   if (
     scene && orbit && bandBack && bandFront &&
-    detail && dTag && dName && dBlurb
+    detail && dTag && dName && dBlurb &&
+    stage && projectDetail && detailBack &&
+    pdTag && pdName && pdBody && pdVisit
   ) {
     const nodes = Array.from(
       orbit.querySelectorAll<HTMLElement>('.saturn-node'),
@@ -198,6 +224,36 @@ const { projects } = Astro.props;
       target = t;
     };
 
+    // ── project detail view ──────────────────────────────────
+    const openDetail = (node: HTMLElement) => {
+      pdTag.textContent = node.dataset.tag || '';
+      pdName.textContent = node.dataset.name || '';
+      pdBody.textContent =
+        node.dataset.details || node.dataset.blurb || '';
+      const url = node.dataset.url;
+      if (url) {
+        pdVisit.setAttribute('href', url);
+        try {
+          pdVisit.textContent =
+            new URL(url).hostname.replace(/^www\./, '') + '  →';
+        } catch {
+          pdVisit.textContent = 'Visit →';
+        }
+        pdVisit.hidden = false;
+      } else {
+        pdVisit.hidden = true;
+      }
+      stage.classList.add('is-detail');
+      projectDetail.setAttribute('aria-hidden', 'false');
+      detailBack.focus();
+    };
+
+    const closeDetail = () => {
+      stage.classList.remove('is-detail');
+      projectDetail.setAttribute('aria-hidden', 'true');
+      scene.focus();
+    };
+
     const frame = () => {
       if (dragging) {
         // spin updated by pointermove
@@ -256,13 +312,14 @@ const { projects } = Astro.props;
       node.addEventListener('click', () => {
         if (moved > 6) return; // was a drag
         if (i === active) {
-          const url = node.dataset.url;
-          if (url) window.open(url, '_blank', 'noopener');
+          openDetail(node);
         } else {
           snapTo(i);
         }
       });
     });
+
+    detailBack.addEventListener('click', closeDetail);
 
     scene.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
@@ -271,6 +328,12 @@ const { projects } = Astro.props;
       } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault();
         snapTo(active - 1);
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && stage.classList.contains('is-detail')) {
+        closeDetail();
       }
     });
   }
