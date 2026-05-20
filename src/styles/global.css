@@ -3,9 +3,7 @@
 @tailwind utilities;
 
 /* ───────────────────────────────────────────────────────────
-   Tokens — warm gallery-dark. The Saturn stage wants depth so
-   the portrait and ring read; this is a warm near-black, not
-   the cool navy of an earlier concept.
+   Tokens — warm gallery-dark.
    ─────────────────────────────────────────────────────────── */
 :root {
   --bg: #1b1712;
@@ -16,16 +14,6 @@
   --rule: #3a3328;
   --brass: #c98f4a;
   --brass-hi: #e0aa64;
-
-  /* Saturn ring geometry — shared by CSS + JS */
-  --tilt: 64deg;
-  --ring-step: 36deg; /* 360 / 10 nodes */
-  --radius: 300px;
-  --spin: 0deg;
-}
-
-@media (max-width: 1024px) {
-  :root { --radius: 248px; }
 }
 
 * { box-sizing: border-box; }
@@ -45,7 +33,6 @@ body {
   min-height: 100vh;
 }
 
-/* faint starfield-free ambient depth */
 body::before {
   content: '';
   position: fixed;
@@ -53,7 +40,7 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(201, 143, 74, 0.10), transparent 70%),
+    radial-gradient(ellipse 70% 50% at 50% 32%, rgba(201, 143, 74, 0.1), transparent 70%),
     radial-gradient(ellipse 90% 60% at 50% 100%, rgba(0, 0, 0, 0.45), transparent 75%);
 }
 
@@ -77,38 +64,61 @@ a { color: inherit; }
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SATURN STAGE
+   SATURN STAGE — 2.5D. The ring is a fixed drawn ellipse;
+   icons are positioned along that same ellipse by JS and
+   travel around it. Nothing rotates.
    ═══════════════════════════════════════════════════════════ */
 .saturn-scene {
   position: relative;
   width: 100%;
-  height: clamp(440px, 62vh, 680px);
-  perspective: 1300px;
-  perspective-origin: 50% 44%;
+  height: clamp(420px, 58vh, 620px);
   touch-action: pan-y;
-  cursor: grab;
   user-select: none;
+  cursor: grab;
 }
 .saturn-scene:active { cursor: grabbing; }
 
-.saturn-system {
+/* ── The ring band — two SVG layers so the ring passes behind
+      the portrait at the top and in front at the bottom. ──── */
+.saturn-band {
   position: absolute;
   inset: 0;
-  transform-style: preserve-3d;
-  display: grid;
-  place-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.saturn-band.is-back { z-index: 1; }
+.saturn-band.is-front { z-index: 8; clip-path: inset(50% 0 0 0); }
+
+.band-glow {
+  fill: none;
+  stroke: rgba(224, 170, 100, 0.12);
+  stroke-width: 22;
+}
+.band-line {
+  fill: none;
+  stroke: rgba(224, 170, 100, 0.55);
+  stroke-width: 1.5;
+}
+.band-line--soft {
+  fill: none;
+  stroke: rgba(224, 170, 100, 0.22);
+  stroke-width: 1;
 }
 
 /* ── The planet — portrait at the centre ───────────────────── */
 .saturn-planet {
-  position: relative;
-  width: clamp(168px, 24vw, 264px);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(168px, 23vw, 248px);
   aspect-ratio: 1;
   border-radius: 50%;
-  transform: translateZ(0);
+  z-index: 5;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 38% 32%, #4a4031, #221d16 78%);
+  background: radial-gradient(circle at 38% 32%, #4a4031, #221d16 78%);
   box-shadow:
     inset -22px -26px 60px rgba(0, 0, 0, 0.7),
     inset 16px 14px 40px rgba(224, 170, 100, 0.12),
@@ -121,138 +131,70 @@ a { color: inherit; }
   object-fit: cover;
   display: block;
 }
-/* placeholder shown until a real /portrait.jpg is added */
 .saturn-planet__placeholder {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
   font-family: 'Fraunces', serif;
-  font-size: 3.4rem;
-  font-weight: 400;
+  font-size: 3.2rem;
   color: var(--brass-hi);
   letter-spacing: 0.04em;
 }
 .saturn-planet__placeholder span:last-child {
   position: absolute;
-  bottom: 14%;
+  bottom: 15%;
   font-family: 'Inter', sans-serif;
-  font-size: 0.6rem;
+  font-size: 0.56rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--ink-faint);
 }
 
-/* ── The ring ───────────────────────────────────────────────── */
-.saturn-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 1px;
-  height: 1px;
-  transform-style: preserve-3d;
-  transform: rotateX(var(--tilt)) rotateY(var(--spin));
-  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.saturn-ring.is-grabbing { transition: none; }
-
-/* The visible ring-band — a tilted annulus the nodes ride on. */
-.ring-band {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: calc(var(--radius) * 2 + 120px);
-  height: calc(var(--radius) * 2 + 120px);
-  margin-left: calc((var(--radius) + 60px) * -1);
-  margin-top: calc((var(--radius) + 60px) * -1);
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    transparent 0,
-    transparent calc(var(--radius) - 46px),
-    rgba(224, 170, 100, 0.07) calc(var(--radius) - 44px),
-    rgba(224, 170, 100, 0.20) var(--radius),
-    rgba(224, 170, 100, 0.07) calc(var(--radius) + 44px),
-    transparent calc(var(--radius) + 46px),
-    transparent 100%
-  );
-}
-.ring-band::after {
-  content: '';
+/* ── Icons riding the ring ──────────────────────────────────── */
+.saturn-orbit {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    transparent calc(var(--radius) - 4px),
-    rgba(224, 170, 100, 0.5) var(--radius),
-    transparent calc(var(--radius) + 4px)
-  );
 }
-
-/* ── Nodes — menu items riding the ring ─────────────────────── */
 .saturn-node {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 0;
-  height: 0;
-  transform: rotateY(calc(var(--i) * var(--ring-step)))
-    translateZ(var(--radius));
-  transform-style: preserve-3d;
-}
-
-/* the face billboards back to the viewer (counters spin + tilt) */
-.saturn-node__face {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%)
-    rotateY(calc(-1 * (var(--spin) + var(--i) * var(--ring-step))))
-    rotateX(calc(-1 * var(--tilt)));
-  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  left: 0;
+  top: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.5rem;
   cursor: pointer;
+  will-change: transform;
+  /* transform / opacity / z-index set by JS each frame */
 }
-.saturn-ring.is-grabbing .saturn-node__face { transition: none; }
-
 .saturn-node__disc {
-  width: 74px;
-  height: 74px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   display: grid;
   place-items: center;
   font-family: 'Fraunces', serif;
-  font-size: 1.5rem;
-  background: linear-gradient(150deg, #2e2719, #201b14);
+  font-size: 1.45rem;
+  background: linear-gradient(150deg, #312819, #211b13);
   color: var(--ink-muted);
   border: 1px solid var(--rule);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  transition: transform 0.35s ease, border-color 0.35s ease,
-    box-shadow 0.35s ease, color 0.35s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  transition: background 0.35s ease, border-color 0.35s ease,
+    color 0.35s ease, box-shadow 0.35s ease;
 }
 .saturn-node__label {
   font-size: 0.72rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   color: var(--ink-faint);
   white-space: nowrap;
   transition: color 0.35s ease;
 }
-
-/* depth cue — nodes toward the back read smaller + dimmer.
-   JS sets --depth (0 front … 1 back) per node each frame. */
-.saturn-node__face { opacity: calc(1 - 0.62 * var(--depth, 0)); }
-.saturn-node__disc { transform: scale(calc(1 - 0.32 * var(--depth, 0))); }
-
 .saturn-node.is-active .saturn-node__disc {
   color: var(--bg);
   background: linear-gradient(150deg, var(--brass-hi), var(--brass));
   border-color: var(--brass-hi);
-  box-shadow: 0 10px 34px rgba(201, 143, 74, 0.5);
-  transform: scale(1.16);
+  box-shadow: 0 12px 36px rgba(201, 143, 74, 0.5);
 }
 .saturn-node.is-active .saturn-node__label {
   color: var(--ink);
@@ -262,7 +204,7 @@ a { color: inherit; }
 .saturn-detail {
   text-align: center;
   max-width: 30rem;
-  margin: 0 auto;
+  margin: 1.5rem auto 0;
   min-height: 9.5rem;
 }
 .saturn-detail__tag {
@@ -271,6 +213,7 @@ a { color: inherit; }
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--brass);
+  margin: 0;
 }
 .saturn-detail__name {
   font-family: 'Fraunces', serif;
@@ -290,17 +233,14 @@ a { color: inherit; }
   display: inline-block;
   font-size: 0.85rem;
   font-weight: 500;
-  letter-spacing: 0.02em;
   color: var(--brass-hi);
   text-decoration: none;
   border-bottom: 1px solid rgba(224, 170, 100, 0.4);
   padding-bottom: 2px;
-  transition: border-color 0.2s ease;
 }
 .saturn-detail__link:hover { border-color: var(--brass-hi); }
 .saturn-detail__link[hidden] { display: none; }
 
-/* fade the detail text as it swaps */
 .saturn-detail.is-swapping .saturn-detail__tag,
 .saturn-detail.is-swapping .saturn-detail__name,
 .saturn-detail.is-swapping .saturn-detail__blurb,
@@ -314,21 +254,18 @@ a { color: inherit; }
   transition: opacity 0.18s ease;
 }
 
-/* ── Controls hint ──────────────────────────────────────────── */
 .saturn-hint {
   text-align: center;
   font-size: 0.72rem;
   letter-spacing: 0.04em;
   color: var(--ink-faint);
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   STATIC FALLBACK GRID — shown for reduced-motion, no-JS,
-   and narrow viewports where a 3D ring is the wrong tool.
+   STATIC FALLBACK GRID — reduced-motion, no-JS, narrow screens.
    ═══════════════════════════════════════════════════════════ */
 .fallback-grid { display: none; }
-
 .fallback-grid__items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
@@ -350,6 +287,7 @@ a { color: inherit; }
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--brass);
+  margin: 0;
 }
 .fallback-card__name {
   font-family: 'Fraunces', serif;
@@ -370,7 +308,6 @@ a { color: inherit; }
   .saturn-stage-wrap { display: none; }
   .fallback-grid { display: block; }
 }
-
 @media (max-width: 720px) {
   .saturn-stage-wrap { display: none; }
   .fallback-grid { display: block; }

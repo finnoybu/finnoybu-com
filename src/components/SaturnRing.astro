@@ -15,39 +15,45 @@ const { projects } = Astro.props;
     role="group"
     aria-label="Project ring — drag, click an icon, or use arrow keys"
   >
-    <div class="saturn-system">
-      <div class="saturn-planet">
-        {/* Drop a square photo at public/portrait.jpg to replace the placeholder. */}
-        <img
-          src="/portrait.jpg"
-          alt="Kenneth Tannenbaum"
-          onerror="this.remove()"
-        />
-        <div class="saturn-planet__placeholder" aria-hidden="true">
-          <span>KT</span>
-          <span>add /portrait.jpg</span>
-        </div>
-      </div>
+    {/* ring band — back half (behind the portrait) */}
+    <svg class="saturn-band is-back" id="bandBack" aria-hidden="true">
+      <ellipse class="band-glow"></ellipse>
+      <ellipse class="band-line--soft"></ellipse>
+      <ellipse class="band-line"></ellipse>
+    </svg>
 
-      <div class="saturn-ring" id="saturnRing">
-        <div class="ring-band" aria-hidden="true"></div>
-        {projects.map((p, i) => (
-          <div
-            class="saturn-node"
-            style={`--i:${i}`}
-            data-index={i}
-            data-name={p.name}
-            data-tag={p.tag}
-            data-blurb={p.blurb}
-            data-url={p.url ?? ''}
-          >
-            <div class="saturn-node__face" role="button" aria-label={p.name}>
-              <div class="saturn-node__disc">{p.monogram}</div>
-              <div class="saturn-node__label">{p.name}</div>
-            </div>
-          </div>
-        ))}
+    {/* the planet */}
+    <div class="saturn-planet">
+      {/* Drop a square photo at public/portrait.jpg to replace the placeholder. */}
+      <img src="/portrait.jpg" alt="Kenneth Tannenbaum" onerror="this.remove()" />
+      <div class="saturn-planet__placeholder" aria-hidden="true">
+        <span>KT</span>
+        <span>add /portrait.jpg</span>
       </div>
+    </div>
+
+    {/* ring band — front half (clipped, in front of the portrait) */}
+    <svg class="saturn-band is-front" id="bandFront" aria-hidden="true">
+      <ellipse class="band-glow"></ellipse>
+      <ellipse class="band-line--soft"></ellipse>
+      <ellipse class="band-line"></ellipse>
+    </svg>
+
+    {/* icons riding the ring */}
+    <div class="saturn-orbit" id="saturnOrbit">
+      {projects.map((p, i) => (
+        <div
+          class="saturn-node"
+          data-index={i}
+          data-name={p.name}
+          data-tag={p.tag}
+          data-blurb={p.blurb}
+          data-url={p.url ?? ''}
+        >
+          <div class="saturn-node__disc">{p.monogram}</div>
+          <div class="saturn-node__label">{p.name}</div>
+        </div>
+      ))}
     </div>
   </div>
 
@@ -63,7 +69,7 @@ const { projects } = Astro.props;
   <p class="saturn-hint">drag the ring &middot; click an icon &middot; &larr;&nbsp;&rarr;&nbsp;arrow keys</p>
 </div>
 
-{/* Static fallback — shown for reduced-motion, narrow screens, and no-JS. */}
+{/* Static fallback — reduced-motion, narrow screens, no-JS. */}
 <div class="fallback-grid">
   <div class="fallback-grid__items">
     {projects.map((p) => (
@@ -78,41 +84,82 @@ const { projects } = Astro.props;
 
 <script>
   const scene = document.getElementById('saturnScene');
-  const ring = document.getElementById('saturnRing');
+  const orbit = document.getElementById('saturnOrbit');
+  const bandBack = document.getElementById('bandBack');
+  const bandFront = document.getElementById('bandFront');
   const detail = document.getElementById('saturnDetail');
   const dTag = document.getElementById('detailTag');
   const dName = document.getElementById('detailName');
   const dBlurb = document.getElementById('detailBlurb');
   const dLink = document.getElementById('detailLink');
 
-  if (scene && ring && detail && dTag && dName && dBlurb && dLink) {
+  if (
+    scene && orbit && bandBack && bandFront &&
+    detail && dTag && dName && dBlurb && dLink
+  ) {
     const nodes = Array.from(
-      ring.querySelectorAll<HTMLElement>('.saturn-node'),
+      orbit.querySelectorAll<HTMLElement>('.saturn-node'),
     );
     const N = nodes.length;
-    const step = N > 0 ? 360 / N : 360;
+    const TAU = Math.PI * 2;
     const reduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
 
-    let spin = 0;
-    let active = -1;
+    let cx = 0, cy = 0, rx = 0, ry = 0;
+    let spin = Math.PI / 2; // node 0 starts at front (bottom)
+    let target: number | null = null;
     let dragging = false;
     let pointerInside = false;
-    let startX = 0;
-    let startSpin = 0;
-    let moved = 0;
+    let startX = 0, startSpin = 0, moved = 0;
+    let active = -1;
 
-    const applySpin = () => {
-      ring.style.setProperty('--spin', spin.toFixed(2) + 'deg');
-      for (let i = 0; i < N; i++) {
-        const a = (((spin + i * step) % 360) + 360) % 360;
-        const depth = (1 - Math.cos((a * Math.PI) / 180)) / 2;
-        nodes[i].style.setProperty('--depth', depth.toFixed(3));
+    const setEllipse = (
+      el: Element | null,
+      ex: number, ey: number, erx: number, ery: number,
+    ) => {
+      if (!el) return;
+      el.setAttribute('cx', String(ex));
+      el.setAttribute('cy', String(ey));
+      el.setAttribute('rx', String(erx));
+      el.setAttribute('ry', String(ery));
+    };
+
+    const layout = () => {
+      const r = scene.getBoundingClientRect();
+      const W = r.width, H = r.height;
+      cx = W / 2;
+      cy = H / 2;
+      rx = Math.min(W * 0.42, 380);
+      ry = rx * 0.34;
+      for (const svg of [bandBack, bandFront]) {
+        svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+        const e = svg.querySelectorAll('ellipse');
+        setEllipse(e[0], cx, cy, rx, ry);
+        setEllipse(e[1], cx, cy, rx * 0.82, ry * 0.82);
+        setEllipse(e[2], cx, cy, rx, ry);
       }
     };
 
-    const nearest = () => (((Math.round(-spin / step)) % N) + N) % N;
+    const place = () => {
+      for (let i = 0; i < N; i++) {
+        const theta = (i / N) * TAU + spin;
+        const x = cx + rx * Math.cos(theta);
+        const y = cy + ry * Math.sin(theta);
+        const depth = (Math.sin(theta) + 1) / 2; // 0 back .. 1 front
+        const scale = 0.62 + 0.46 * depth;
+        const n = nodes[i];
+        n.style.transform =
+          `translate(calc(${x.toFixed(1)}px - 50%), calc(${y.toFixed(1)}px - 50%)) scale(${scale.toFixed(3)})`;
+        n.style.opacity = (0.4 + 0.6 * depth).toFixed(3);
+        n.style.zIndex = depth >= 0.5 ? '11' : '4';
+      }
+    };
+
+    const frontIndex = () => {
+      const idx = Math.round(((Math.PI / 2 - spin) / TAU) * N);
+      return ((idx % N) + N) % N;
+    };
 
     const swap = (node: HTMLElement) => {
       detail.classList.add('is-swapping');
@@ -128,71 +175,72 @@ const { projects } = Astro.props;
           dLink.hidden = true;
         }
         detail.classList.remove('is-swapping');
-      }, 170);
+      }, 160);
     };
 
-    const mark = (idx: number) => {
+    const refreshActive = () => {
+      const idx = frontIndex();
       if (idx === active) return;
       active = idx;
       nodes.forEach((n, i) => n.classList.toggle('is-active', i === idx));
       swap(nodes[idx]);
     };
 
-    const goTo = (i: number) => {
-      const norm = ((i % N) + N) % N;
-      let target = -i * step;
-      while (target - spin > 180) target -= 360;
-      while (target - spin < -180) target += 360;
-      spin = target;
-      ring.classList.remove('is-grabbing');
-      applySpin();
-      mark(norm);
+    const snapTo = (i: number) => {
+      let t = Math.PI / 2 - (i / N) * TAU;
+      while (t - spin > Math.PI) t -= TAU;
+      while (t - spin < -Math.PI) t += TAU;
+      target = t;
     };
 
-    applySpin();
-    goTo(0);
-
-    // idle drift — the planet keeps turning until you touch it
-    const tick = () => {
-      if (!dragging && !pointerInside) {
-        spin -= 0.05;
-        ring.classList.add('is-grabbing');
-        applySpin();
-        mark(nearest());
+    const frame = () => {
+      if (dragging) {
+        // spin updated by pointermove
+      } else if (target !== null) {
+        spin += (target - spin) * 0.16;
+        if (Math.abs(target - spin) < 0.0015) {
+          spin = target;
+          target = null;
+        }
+      } else if (!pointerInside && !reduced) {
+        spin += 0.0032; // idle drift
       }
-      requestAnimationFrame(tick);
+      place();
+      refreshActive();
+      requestAnimationFrame(frame);
     };
-    if (!reduced) requestAnimationFrame(tick);
 
-    scene.addEventListener('pointerenter', () => {
-      pointerInside = true;
+    layout();
+    place();
+    refreshActive();
+    requestAnimationFrame(frame);
+
+    window.addEventListener('resize', () => {
+      layout();
+      place();
     });
-    scene.addEventListener('pointerleave', () => {
-      pointerInside = false;
-    });
+
+    scene.addEventListener('pointerenter', () => { pointerInside = true; });
+    scene.addEventListener('pointerleave', () => { pointerInside = false; });
 
     scene.addEventListener('pointerdown', (e) => {
       dragging = true;
       moved = 0;
+      target = null;
       startX = e.clientX;
       startSpin = spin;
-      ring.classList.add('is-grabbing');
       scene.setPointerCapture(e.pointerId);
     });
-
     scene.addEventListener('pointermove', (e) => {
       if (!dragging) return;
       const dx = e.clientX - startX;
       if (Math.abs(dx) > moved) moved = Math.abs(dx);
-      spin = startSpin + dx * 0.34;
-      applySpin();
-      mark(nearest());
+      spin = startSpin + dx * 0.006;
     });
-
     const endDrag = () => {
       if (!dragging) return;
       dragging = false;
-      goTo(nearest());
+      snapTo(frontIndex());
     };
     scene.addEventListener('pointerup', endDrag);
     scene.addEventListener('pointercancel', endDrag);
@@ -200,17 +248,17 @@ const { projects } = Astro.props;
     nodes.forEach((node, i) => {
       node.addEventListener('click', () => {
         if (moved > 6) return;
-        goTo(i);
+        snapTo(i);
       });
     });
 
     scene.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault();
-        goTo(active - 1);
+        snapTo(active + 1);
       } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault();
-        goTo(active + 1);
+        snapTo(active - 1);
       }
     });
   }
