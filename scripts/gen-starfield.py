@@ -32,6 +32,7 @@ out = [
     '.twf{animation:twf var(--d) ease-in-out infinite;animation-delay:var(--delay)}'
     '@keyframes tw{0%,100%{opacity:var(--o)}50%{opacity:calc(var(--o)*0.40)}}'
     '@keyframes twf{0%,100%{opacity:var(--o)}50%{opacity:calc(var(--o)*0.72)}}'
+    '@media(prefers-reduced-motion:reduce){.tw,.twf{animation:none}}'
     '</style>',
 ]
 
@@ -71,6 +72,6 @@ for hexc, r in FEATURES:
 
 out.append('</svg>')
 
-with open('public/starfield.svg', 'w', encoding='utf-8') as f:
+with open('src/assets/starfield.svg', 'w', encoding='utf-8') as f:
     f.write('\n'.join(out))
-print(f'wrote public/starfield.svg — {len(out) - 3} stars')
+print(f'wrote src/assets/starfield.svg — {len(out) - 3} stars')

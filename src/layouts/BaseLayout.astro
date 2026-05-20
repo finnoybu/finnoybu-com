@@ -1,5 +1,6 @@
 ---
 import '~/styles/global.css';
+import starfield from '~/assets/starfield.svg?raw';
 
 interface Props {
   title?: string;
@@ -7,8 +8,8 @@ interface Props {
 }
 
 const {
-  title = 'Kenneth Tannenbaum',
-  description = 'Senior Staff QA Engineer and Founder of the AEGIS Initiative. Projects in AI governance, fiction, publishing, and digital forensics.',
+  title = 'Ken Tannenbaum',
+  description = 'Ken Tannenbaum — software engineer, author, entrepreneur. Projects in AI governance, fiction, publishing, and digital forensics.',
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
@@ -34,9 +35,10 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,30..100&family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap"
     />
 
-    <meta name="theme-color" content="#0d1620" />
+    <meta name="theme-color" content="#0d1626" />
   </head>
   <body>
+    <div class="starfield" set:html={starfield} aria-hidden="true"></div>
     <slot />
   </body>
 </html>
