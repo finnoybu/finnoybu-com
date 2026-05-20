@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ───────────────────────────────────────────────────────────
+   Base
+   ─────────────────────────────────────────────────────────── */
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+  /* Reserve scrollbar width so the gradient backdrop doesn't shift between
+     pages of different heights. */
+  scrollbar-gutter: stable;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #ece4d0;
+  background: #0d1620;
+  font-feature-settings: 'liga', 'kern';
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ───────────────────────────────────────────────────────────
+   The stratified gradient — top (architect navy) to
+   bottom (Finn parchment). This is the one design move that
+   ties the whole concept together: scroll position IS time.
+   ─────────────────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    #0d1620 0%,
+    #0d1620 18%,
+    #1a2530 30%,
+    #2d2a26 48%,
+    #4a4338 62%,
+    #6d624f 75%,
+    #b0a385 88%,
+    #f6f1e4 100%
+  );
+}
+
+/* Subtle ambient texture across the whole page — keeps the gradient from
+   looking like flat compositing. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 8%, rgba(255,255,255,0.04), transparent 70%),
+    radial-gradient(ellipse 80% 50% at 50% 92%, rgba(0,0,0,0.04), transparent 70%);
+  mix-blend-mode: overlay;
+}
+
+::selection {
+  background: #a8763e;
+  color: #0d1620;
+}
+
+:focus-visible {
+  outline: 2px solid #a8763e;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* ───────────────────────────────────────────────────────────
+   Display utilities used across strata
+   ─────────────────────────────────────────────────────────── */
+.eyebrow {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.rule-soft {
+  height: 1px;
+  background: linear-gradient(to right, transparent, currentColor, transparent);
+  opacity: 0.18;
+}
+
+/* ───────────────────────────────────────────────────────────
+   Code block (used by the Python snippet in Origin stratum)
+   ─────────────────────────────────────────────────────────── */
+pre.code {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  padding: 1.25rem 1.5rem;
+  border-radius: 6px;
+  background: rgba(26, 22, 17, 0.06);
+  border: 1px solid rgba(26, 22, 17, 0.12);
+  overflow-x: auto;
+  color: #1a1611;
+}
+pre.code .kw  { color: #1d3a52; font-weight: 600; }
+pre.code .str { color: #a8763e; }
+pre.code .com { color: #8a7e6a; font-style: italic; }
+pre.code .fn  { color: #2d5a7f; }
