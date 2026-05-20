@@ -245,15 +245,17 @@ const { projects } = Astro.props;
     scene.addEventListener('pointerenter', () => { pointerInside = true; });
     scene.addEventListener('pointerleave', () => { pointerInside = false; });
 
+    // NB: no setPointerCapture — capturing the pointer on the scene steals
+    // the `click` event from the icons. Drag moves are tracked on `window`
+    // so a drag still works if the pointer leaves the scene.
     scene.addEventListener('pointerdown', (e) => {
       dragging = true;
       moved = 0;
       target = null;
       startX = e.clientX;
       startSpin = spin;
-      scene.setPointerCapture(e.pointerId);
     });
-    scene.addEventListener('pointermove', (e) => {
+    window.addEventListener('pointermove', (e) => {
       if (!dragging) return;
       const dx = e.clientX - startX;
       if (Math.abs(dx) > moved) moved = Math.abs(dx);
@@ -264,8 +266,8 @@ const { projects } = Astro.props;
       dragging = false;
       snapTo(frontIndex());
     };
-    scene.addEventListener('pointerup', endDrag);
-    scene.addEventListener('pointercancel', endDrag);
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
 
     nodes.forEach((node, i) => {
       node.addEventListener('click', () => {
