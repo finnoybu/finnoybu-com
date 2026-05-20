@@ -71,15 +71,6 @@ const { projects } = Astro.props;
     <p class="saturn-detail__tag" id="detailTag"></p>
     <h2 class="saturn-detail__name" id="detailName"></h2>
     <p class="saturn-detail__blurb" id="detailBlurb"></p>
-    <a
-      class="saturn-detail__link"
-      id="detailLink"
-      href="#"
-      target="_blank"
-      rel="noopener"
-    >
-      Visit&nbsp;&rarr;
-    </a>
   </div>
 </div>
 
@@ -105,11 +96,10 @@ const { projects } = Astro.props;
   const dTag = document.getElementById('detailTag');
   const dName = document.getElementById('detailName');
   const dBlurb = document.getElementById('detailBlurb');
-  const dLink = document.getElementById('detailLink');
 
   if (
     scene && orbit && bandBack && bandFront &&
-    detail && dTag && dName && dBlurb && dLink
+    detail && dTag && dName && dBlurb
   ) {
     const nodes = Array.from(
       orbit.querySelectorAll<HTMLElement>('.saturn-node'),
@@ -189,13 +179,6 @@ const { projects } = Astro.props;
         dName.textContent = node.dataset.name || '';
         dTag.textContent = node.dataset.tag || '';
         dBlurb.textContent = node.dataset.blurb || '';
-        const url = node.dataset.url;
-        if (url) {
-          dLink.setAttribute('href', url);
-          dLink.hidden = false;
-        } else {
-          dLink.hidden = true;
-        }
         detail.classList.remove('is-swapping');
       }, 160);
     };

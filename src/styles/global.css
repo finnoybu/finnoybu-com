@@ -258,38 +258,15 @@ a { color: inherit; }
   color: var(--ink-muted);
   margin: 0 0 1rem;
 }
-.saturn-detail__link {
-  display: inline-block;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--accent-hi);
-  text-decoration: none;
-  border-bottom: 1px solid rgba(127, 182, 236, 0.4);
-  padding-bottom: 2px;
-}
-.saturn-detail__link:hover { border-color: var(--accent-hi); }
-.saturn-detail__link[hidden] { display: none; }
-
 .saturn-detail.is-swapping .saturn-detail__tag,
 .saturn-detail.is-swapping .saturn-detail__name,
-.saturn-detail.is-swapping .saturn-detail__blurb,
-.saturn-detail.is-swapping .saturn-detail__link {
+.saturn-detail.is-swapping .saturn-detail__blurb {
   opacity: 0;
 }
 .saturn-detail__tag,
 .saturn-detail__name,
-.saturn-detail__blurb,
-.saturn-detail__link {
+.saturn-detail__blurb {
   transition: opacity 0.18s ease;
-}
-
-/* controls hint — pinned toward the footer by index.astro's flex layout */
-.saturn-hint {
-  text-align: center;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  color: var(--ink-faint);
-  margin: auto 0 0.4rem;
 }
 
 /* ═══════════════════════════════════════════════════════════
