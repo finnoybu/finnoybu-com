@@ -35,15 +35,28 @@ body {
   min-height: 100vh;
 }
 
+/* backdrop: starfield + ambient nebula glow */
 body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 32%, rgba(79, 147, 214, 0.12), transparent 70%),
+    radial-gradient(ellipse 90% 60% at 50% 100%, rgba(0, 0, 0, 0.55), transparent 75%),
+    url('/starfield.svg') center / cover no-repeat;
+}
+
+/* film grain — faint tooth over the flat dark areas */
+body::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse 70% 50% at 50% 32%, rgba(79, 147, 214, 0.12), transparent 70%),
-    radial-gradient(ellipse 90% 60% at 50% 100%, rgba(0, 0, 0, 0.5), transparent 75%);
+  background: url('/grain.svg') repeat;
+  opacity: 0.08;
 }
 
 ::selection { background: var(--accent); color: var(--bg); }
