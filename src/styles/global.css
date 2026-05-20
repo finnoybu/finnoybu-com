@@ -87,6 +87,8 @@ a { color: inherit; }
   height: 100%;
   overflow: visible;
   pointer-events: none;
+  /* rotation applied by JS (single source of truth for the tilt) */
+  transform-origin: 50% 50%;
 }
 .saturn-band.is-back { z-index: 1; }
 .saturn-band.is-front { z-index: 8; clip-path: inset(50% 0 0 0); }
