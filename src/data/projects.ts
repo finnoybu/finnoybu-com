@@ -20,6 +20,8 @@ export const PROJECTS: Project[] = [
     tag: 'AI Governance',
     blurb:
       'A governance architecture for constrained intelligence. It evaluates human intent, clarifies consequences, and enforces explicit boundaries before AI agents act — a twelve-repository ecosystem with published specs, protocols, and a live operator platform.',
+    details:
+      'AEGIS is a governance architecture for constrained intelligence — a system that evaluates human intent, clarifies the consequences of a requested action, and enforces explicit boundaries before an AI agent is allowed to act. It treats authority, constraint, and consequence-awareness as first-class architectural properties rather than safeguards bolted on afterward; the working principle is that capability without constraint is not intelligence. The initiative spans a twelve-repository ecosystem — the AGP-1 governance runtime, the ATX-1 threat taxonomy, published specifications and position papers, and a hosted operator platform with a live demo. Reference releases carry DOIs, and the protocol RFCs and adversarial-evaluation program are active work.',
     url: 'https://aegis-initiative.com',
   },
   {
@@ -29,6 +31,8 @@ export const PROJECTS: Project[] = [
     tag: 'Memoir',
     blurb:
       "The memoir of Olavus Vullum Bjørnson Vestbø (1859–1940), a Norwegian sailor on the proud sailships — translated, transcribed, and published more than a century after he set out.",
+    details:
+      "A Sailor's Reminiscences is the memoir of Olavus Vullum Bjørnson Vestbø (1859–1940), who left Norway as a boy and spent his youth aboard the merchant sailships. Olavus was my great-great-grandfather. I received a copy of his memoirs in 1999, after I was reunited with my birth family thirty-three years on from being adopted. The manuscript had been translated from Norwegian decades earlier and hand-copied more than once along the way, so bringing it back to life — transcribed, edited, and published where anyone can read it — took the better part of twenty years. Sixty-eight chapters, and finally finished.",
     url: 'https://memoirs.finnoybu.com',
   },
   {
@@ -38,6 +42,8 @@ export const PROJECTS: Project[] = [
     tag: 'Fiction',
     blurb:
       'A Norse fantasy trilogy written as E. A. Westbo. Book I, Salt and Silence, is complete; Books II and III are drafted.',
+    details:
+      'The Finnoybu Trilogy is a three-book Norse fantasy series, written under the pen name E. A. Westbo. Book I, Salt and Silence, is complete and prepared for print; Books II and III are drafted.',
     url: 'https://fiction.finnoybu.com',
   },
   {
@@ -47,6 +53,8 @@ export const PROJECTS: Project[] = [
     tag: 'Publishing',
     blurb:
       'Practical AI guidebooks — fifteen titles and counting, across ChatGPT, Claude, Gemini, Copilot, Perplexity, DeepSeek, Cursor, and more.',
+    details:
+      'FINNOYBU Press is a publishing imprint built on a simple idea: the tools reshaping how people work deserve clear, practical guides written for the people actually using them. Its catalog covers the current generation of AI systems — ChatGPT, Claude, Gemini, Copilot, Perplexity, DeepSeek, Cursor, OpenClaw, NotebookLM — alongside an AI Systems Playbook that ties them together, fifteen titles and counting. Every guide is hands-on rather than theoretical, and the storefront runs at press.finnoybu.org.',
     url: 'https://press.finnoybu.org',
   },
   {
