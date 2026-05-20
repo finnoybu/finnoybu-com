@@ -1,134 +1,83 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import Stratum from '~/components/Stratum.astro';
-import ProjectCard from '~/components/ProjectCard.astro';
-import { PROJECTS, STRATA } from '~/data/projects';
-
-const byStratum = Object.fromEntries(
-  STRATA.map((s) => [s.id, PROJECTS.filter((p) => p.stratum === s.id)]),
-);
+import SaturnRing from '~/components/SaturnRing.astro';
+import { PROJECTS } from '~/data/projects';
 ---
 <BaseLayout>
-  {/* ───────────────────────────────────────────────────────
-      HERO — top of the chronicle. Architect register.
-      ─────────────────────────────────────────────────────── */}
-  <header class="relative">
-    <div class="mx-auto max-w-shell px-6 md:px-10 pt-24 md:pt-32 pb-16 md:pb-24">
-      <p class="eyebrow text-brass mb-6">Kenneth Tannenbaum</p>
-      <h1 class="font-display text-5xl md:text-7xl lg:text-8xl font-medium leading-[1.04] tracking-tight text-stratum-deep-ink mb-8">
-        Pick things apart.<br/>
-        <span class="italic text-stratum-deep-ink/85">Reconstruct them.</span>
-      </h1>
-      <p class="max-w-prose text-lg md:text-xl leading-relaxed text-stratum-deep-muted mb-10">
-        Senior Staff QA Engineer. Founder of the AEGIS Initiative.
-        Translator and editor of one Norwegian sailor's memoir, author of one
-        Norse fantasy trilogy, publisher of fifteen practical AI guidebooks,
-        and quiet builder of small private sites for specific humans.
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">finnoybu.com</p>
+      <h1 class="hero__name">Kenneth&nbsp;Tannenbaum</h1>
+      <p class="hero__role">
+        Senior Staff QA Engineer &middot; Founder of the AEGIS Initiative
       </p>
-      <div class="flex flex-wrap items-center gap-6 text-sm font-mono">
-        <a href="#now" class="text-stratum-deep-ink hover:text-brass transition-colors">
-          ↓&nbsp;the work, top to bottom
-        </a>
-        <span class="text-stratum-deep-muted/60">·</span>
-        <a href="#origin" class="text-stratum-deep-muted hover:text-brass transition-colors">
-          jump to origin
-        </a>
-      </div>
-    </div>
-  </header>
+    </header>
 
-  {/* ───────────────────────────────────────────────────────
-      The five strata, top to bottom.
-      Each progressively warmer in tone, looser in spacing.
-      ─────────────────────────────────────────────────────── */}
-  {STRATA.map((s, idx) => {
-    const tones = ['deep', 'mid', 'mid', 'warm', 'warm'] as const;
-    const tone = tones[idx] ?? 'deep';
-    return (
-      <Stratum
-        id={s.id}
-        label={s.label}
-        period={s.period}
-        blurb={s.blurb}
-        tone={tone}
-      >
-        {byStratum[s.id].map((project) => (
-          <ProjectCard project={project} tone={tone} />
-        ))}
-      </Stratum>
-    );
-  })}
+    <SaturnRing projects={PROJECTS} />
 
-  {/* ───────────────────────────────────────────────────────
-      ORIGIN — Finn voice returns at the bottom. Parchment.
-      The aesthetic IS the autobiography: we have arrived at
-      where this person started.
-      ─────────────────────────────────────────────────────── */}
-  <section id="origin" class="relative">
-    <div class="mx-auto max-w-shell px-6 md:px-10 py-20 md:py-28 text-stratum-light-ink">
-      <p class="eyebrow text-brass mb-4">Origin</p>
-      <h2 class="font-display text-4xl md:text-5xl font-medium leading-tight tracking-tight mb-3">
-        Hey, I'm Finn.
-      </h2>
-      <p class="font-mono text-xs text-stratum-light-muted mb-10">
-        c. 2018 — the page that used to be here
-      </p>
-
-      <div class="grid md:grid-cols-[1.1fr_1fr] gap-10 md:gap-14 items-start">
-        <div class="font-serif text-lg leading-relaxed text-stratum-light-ink/90 space-y-5">
-          <p>
-            I am a scripting hobbyist with an innate desire to pick things
-            apart, if only to reconstruct them again. I often make things
-            more difficult than they need to be, but that is really just my
-            way of learning the finer details.
-          </p>
-          <p>
-            I have always got more going on than I can keep up with, so if
-            anything seems half-baked or completely unfinished... well, it
-            probably is.
-          </p>
-          <p class="text-stratum-light-muted text-base italic">
-            Eight years on, this is still mostly true. The frameworks got
-            more rigorous; the underlying habit didn't change. Everything
-            above this stratum started here — as someone curious enough to
-            take a thing apart, and stubborn enough to put it back together.
-          </p>
-        </div>
-
-        <div>
-<pre class="code"><span class="com">#!/usr/bin/env python</span>
-
-<span class="kw">greeting</span> = <span class="str">"Hello, World!"</span>
-
-<span class="kw">def</span> <span class="fn">main</span>(arg):
-  <span class="fn">print</span>(arg)
-
-<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
-    <span class="fn">main</span>(greeting)
-</pre>
-        </div>
-      </div>
-
-      <div class="mt-20 flex flex-wrap items-center justify-between gap-4 text-sm">
-        <p class="text-stratum-light-muted font-mono text-xs">
-          finnoybu.com · all of the above is one person's worldview, chronicled top to bottom
-        </p>
-        <div class="flex items-center gap-5">
-          <a
-            href="https://github.com/finnoybu"
-            class="text-stratum-light-ink hover:text-brass transition-colors no-underline"
-            rel="noopener"
-          >
-            github
-          </a>
-          <a
-            href="mailto:hello@finnoybu.com"
-            class="text-stratum-light-ink hover:text-brass transition-colors no-underline"
-          >
-            hello@finnoybu.com
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
+    <footer class="site-footer">
+      <span class="site-footer__mark">finnoybu.com</span>
+      <span class="site-footer__links">
+        <a href="https://github.com/finnoybu">github</a>
+        <a href="mailto:hello@finnoybu.com">hello@finnoybu.com</a>
+      </span>
+    </footer>
+  </main>
 </BaseLayout>
+
+<style>
+  .page {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero {
+    text-align: center;
+    padding-top: clamp(3rem, 9vh, 6rem);
+    padding-bottom: clamp(0.5rem, 2vh, 1.5rem);
+  }
+  .hero .eyebrow {
+    display: block;
+    margin-bottom: 1.1rem;
+  }
+  .hero__name {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(2.6rem, 6.5vw, 4.6rem);
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+    margin: 0;
+    color: var(--ink);
+  }
+  .hero__role {
+    margin: 1rem 0 0;
+    font-size: clamp(0.82rem, 1.6vw, 0.98rem);
+    color: var(--ink-muted);
+    letter-spacing: 0.01em;
+  }
+
+  .site-footer {
+    margin-top: auto;
+    padding: 2rem 0 2.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--rule);
+  }
+  .site-footer a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    margin-left: 1.25rem;
+    transition: color 0.2s ease;
+  }
+  .site-footer a:first-child { margin-left: 0; }
+  .site-footer a:hover { color: var(--brass-hi); }
+</style>

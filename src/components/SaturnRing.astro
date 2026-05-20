@@ -1,0 +1,217 @@
+---
+import type { Project } from '~/data/projects';
+
+interface Props {
+  projects: Project[];
+}
+
+const { projects } = Astro.props;
+---
+<div class="saturn-stage-wrap">
+  <div
+    class="saturn-scene"
+    id="saturnScene"
+    tabindex="0"
+    role="group"
+    aria-label="Project ring — drag, click an icon, or use arrow keys"
+  >
+    <div class="saturn-system">
+      <div class="saturn-planet">
+        {/* Drop a square photo at public/portrait.jpg to replace the placeholder. */}
+        <img
+          src="/portrait.jpg"
+          alt="Kenneth Tannenbaum"
+          onerror="this.remove()"
+        />
+        <div class="saturn-planet__placeholder" aria-hidden="true">
+          <span>KT</span>
+          <span>add /portrait.jpg</span>
+        </div>
+      </div>
+
+      <div class="saturn-ring" id="saturnRing">
+        <div class="ring-band" aria-hidden="true"></div>
+        {projects.map((p, i) => (
+          <div
+            class="saturn-node"
+            style={`--i:${i}`}
+            data-index={i}
+            data-name={p.name}
+            data-tag={p.tag}
+            data-blurb={p.blurb}
+            data-url={p.url ?? ''}
+          >
+            <div class="saturn-node__face" role="button" aria-label={p.name}>
+              <div class="saturn-node__disc">{p.monogram}</div>
+              <div class="saturn-node__label">{p.name}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <div class="saturn-detail" id="saturnDetail">
+    <p class="saturn-detail__tag" id="detailTag"></p>
+    <h2 class="saturn-detail__name" id="detailName"></h2>
+    <p class="saturn-detail__blurb" id="detailBlurb"></p>
+    <a class="saturn-detail__link" id="detailLink" href="#" rel="noopener">
+      Visit&nbsp;&rarr;
+    </a>
+  </div>
+
+  <p class="saturn-hint">drag the ring &middot; click an icon &middot; &larr;&nbsp;&rarr;&nbsp;arrow keys</p>
+</div>
+
+{/* Static fallback — shown for reduced-motion, narrow screens, and no-JS. */}
+<div class="fallback-grid">
+  <div class="fallback-grid__items">
+    {projects.map((p) => (
+      <a class="fallback-card" href={p.url ?? '#'}>
+        <p class="fallback-card__tag">{p.tag}</p>
+        <p class="fallback-card__name">{p.name}</p>
+        <p class="fallback-card__blurb">{p.blurb}</p>
+      </a>
+    ))}
+  </div>
+</div>
+
+<script>
+  const scene = document.getElementById('saturnScene');
+  const ring = document.getElementById('saturnRing');
+  const detail = document.getElementById('saturnDetail');
+  const dTag = document.getElementById('detailTag');
+  const dName = document.getElementById('detailName');
+  const dBlurb = document.getElementById('detailBlurb');
+  const dLink = document.getElementById('detailLink');
+
+  if (scene && ring && detail && dTag && dName && dBlurb && dLink) {
+    const nodes = Array.from(
+      ring.querySelectorAll<HTMLElement>('.saturn-node'),
+    );
+    const N = nodes.length;
+    const step = N > 0 ? 360 / N : 360;
+    const reduced = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+
+    let spin = 0;
+    let active = -1;
+    let dragging = false;
+    let pointerInside = false;
+    let startX = 0;
+    let startSpin = 0;
+    let moved = 0;
+
+    const applySpin = () => {
+      ring.style.setProperty('--spin', spin.toFixed(2) + 'deg');
+      for (let i = 0; i < N; i++) {
+        const a = (((spin + i * step) % 360) + 360) % 360;
+        const depth = (1 - Math.cos((a * Math.PI) / 180)) / 2;
+        nodes[i].style.setProperty('--depth', depth.toFixed(3));
+      }
+    };
+
+    const nearest = () => (((Math.round(-spin / step)) % N) + N) % N;
+
+    const swap = (node: HTMLElement) => {
+      detail.classList.add('is-swapping');
+      window.setTimeout(() => {
+        dName.textContent = node.dataset.name || '';
+        dTag.textContent = node.dataset.tag || '';
+        dBlurb.textContent = node.dataset.blurb || '';
+        const url = node.dataset.url;
+        if (url) {
+          dLink.setAttribute('href', url);
+          dLink.hidden = false;
+        } else {
+          dLink.hidden = true;
+        }
+        detail.classList.remove('is-swapping');
+      }, 170);
+    };
+
+    const mark = (idx: number) => {
+      if (idx === active) return;
+      active = idx;
+      nodes.forEach((n, i) => n.classList.toggle('is-active', i === idx));
+      swap(nodes[idx]);
+    };
+
+    const goTo = (i: number) => {
+      const norm = ((i % N) + N) % N;
+      let target = -i * step;
+      while (target - spin > 180) target -= 360;
+      while (target - spin < -180) target += 360;
+      spin = target;
+      ring.classList.remove('is-grabbing');
+      applySpin();
+      mark(norm);
+    };
+
+    applySpin();
+    goTo(0);
+
+    // idle drift — the planet keeps turning until you touch it
+    const tick = () => {
+      if (!dragging && !pointerInside) {
+        spin -= 0.05;
+        ring.classList.add('is-grabbing');
+        applySpin();
+        mark(nearest());
+      }
+      requestAnimationFrame(tick);
+    };
+    if (!reduced) requestAnimationFrame(tick);
+
+    scene.addEventListener('pointerenter', () => {
+      pointerInside = true;
+    });
+    scene.addEventListener('pointerleave', () => {
+      pointerInside = false;
+    });
+
+    scene.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      moved = 0;
+      startX = e.clientX;
+      startSpin = spin;
+      ring.classList.add('is-grabbing');
+      scene.setPointerCapture(e.pointerId);
+    });
+
+    scene.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > moved) moved = Math.abs(dx);
+      spin = startSpin + dx * 0.34;
+      applySpin();
+      mark(nearest());
+    });
+
+    const endDrag = () => {
+      if (!dragging) return;
+      dragging = false;
+      goTo(nearest());
+    };
+    scene.addEventListener('pointerup', endDrag);
+    scene.addEventListener('pointercancel', endDrag);
+
+    nodes.forEach((node, i) => {
+      node.addEventListener('click', () => {
+        if (moved > 6) return;
+        goTo(i);
+      });
+    });
+
+    scene.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        goTo(active - 1);
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        goTo(active + 1);
+      }
+    });
+  }
+</script>
