@@ -72,7 +72,10 @@ export const PROJECTS: Project[] = [
     monogram: 'DI',
     tag: 'Infrastructure',
     blurb:
-      'The Domain Integrity Engine — a deterministic monitor that snapshots, diffs, and classifies operational drift across DNS, TLS, and RDAP over time.',
+      'The Domain Integrity Verification Engine — a deterministic monitor that snapshots, diffs, and classifies operational drift across DNS, TLS, and RDAP over time.',
+    details:
+      "DIVE — the Domain Integrity Verification Engine — checks that a domain's infrastructure still is what it's supposed to be. It captures deterministic snapshots of a domain's RDAP registration, DNS records, and TLS certificates, keeps a bounded history of them, and diffs consecutive snapshots to grade every change as stable, drift, risk, or critical. It wasn't planned: a system-administration tool once did this kind of watching, but it quietly went dark years ago. DIVE grew on its own while I was centralizing what I knew about my own domains — it became a tool because the need was there, not because I set out to build one. Determinism is the point: the same inputs always produce the same verdict, so the monitor itself can be trusted.",
+    url: 'https://github.com/finnoybu/finnoybu-org',
   },
   {
     id: 'forensickle',
