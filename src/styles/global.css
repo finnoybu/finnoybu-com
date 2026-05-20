@@ -131,6 +131,7 @@ a { color: inherit; }
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 50% 18%;
   display: block;
 }
 .saturn-planet__placeholder {
