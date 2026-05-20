@@ -25,11 +25,20 @@ const { projects } = Astro.props;
     {/* the planet */}
     <div class="saturn-planet">
       <div class="saturn-planet__sphere" aria-hidden="true"></div>
+      {/* body layer — clipped to the circle (the clean crop) */}
+      <div class="saturn-planet__crop">
+        <img
+          class="saturn-planet__photo"
+          src="/portrait.png"
+          alt="Ken Tannenbaum"
+        />
+      </div>
+      {/* head layer — same photo, top strip only, rises above the rim */}
       <img
-        class="saturn-planet__photo"
+        class="saturn-planet__head"
         src="/portrait.png"
-        alt="Kenneth Tannenbaum"
-        onerror="this.remove()"
+        alt=""
+        aria-hidden="true"
       />
     </div>
 

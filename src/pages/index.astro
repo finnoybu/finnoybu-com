@@ -7,10 +7,9 @@ import { PROJECTS } from '~/data/projects';
   <main class="page">
     <header class="hero">
       <p class="eyebrow">finnoybu.com</p>
-      <h1 class="hero__name">Kenneth&nbsp;Tannenbaum</h1>
-      <p class="hero__role">
-        Senior Staff QA Engineer &middot; Founder of the AEGIS Initiative
-      </p>
+      <h1 class="hero__name">Ken&nbsp;Tannenbaum</h1>
+      <p class="hero__role">Software Engineer, Author, Entrepreneur</p>
+      <p class="hero__blurb">Welcome to my corner of the universe</p>
     </header>
 
     <SaturnRing projects={PROJECTS} />
@@ -59,10 +58,17 @@ import { PROJECTS } from '~/data/projects';
     color: var(--ink);
   }
   .hero__role {
-    margin: 1rem 0 0;
-    font-size: clamp(0.82rem, 1.6vw, 0.98rem);
+    margin: 0.95rem 0 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .hero__blurb {
+    margin: 1.35rem 0 0;
+    font-size: 1.02rem;
     color: var(--ink-muted);
-    letter-spacing: 0.01em;
   }
 
   .site-footer {
@@ -84,5 +90,5 @@ import { PROJECTS } from '~/data/projects';
     transition: color 0.2s ease;
   }
   .site-footer a:first-child { margin-left: 0; }
-  .site-footer a:hover { color: var(--brass-hi); }
+  .site-footer a:hover { color: var(--accent-hi); }
 </style>
