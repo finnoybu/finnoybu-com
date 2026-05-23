@@ -1,7 +1,8 @@
 // Drizzle schema — auth tables only. This is the central auth host;
-// fiction.finnoybu.com and memoirs.finnoybu.com bind the same D1 and own
-// the reading-data tables (reading_progress / bookmarks / annotations /
-// errata_reports / purchases) authored in the finnoybu-trilogy repo.
+// fiction.finnoybu.com and memoirs.finnoybu.com bind the same D1
+// (`finnoybu-com`) and own the reading-data tables (reading_progress /
+// bookmarks / annotations / errata_reports / purchases) authored in the
+// finnoybu-trilogy repo.
 //
 // One user row spans all three sites because cookies are set at
 // `.finnoybu.com`. The Better Auth catch-all on finnoybu.com writes to the
