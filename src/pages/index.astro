@@ -3,6 +3,8 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import SaturnRing from '~/components/SaturnRing.astro';
 import SiteFooter from '~/components/SiteFooter.astro';
 import { PROJECTS } from '~/data/projects';
+
+export const prerender = true;
 ---
 <BaseLayout>
   <main class="page">

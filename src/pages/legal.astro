@@ -2,6 +2,8 @@
 import PageLayout from '~/layouts/PageLayout.astro';
 import PolicyArticle from '~/components/PolicyArticle.astro';
 import { LEGAL_SECTIONS, LEGAL_LAST_UPDATED } from '~/data/legal';
+
+export const prerender = true;
 ---
 <PageLayout
   title="Legal"
