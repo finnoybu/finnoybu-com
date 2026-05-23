@@ -1,0 +1,16 @@
+---
+import PageLayout from '~/layouts/PageLayout.astro';
+import PolicyArticle from '~/components/PolicyArticle.astro';
+import { LEGAL_SECTIONS, LEGAL_LAST_UPDATED } from '~/data/legal';
+---
+<PageLayout
+  title="Legal"
+  description="Terms, copyright, and policies for finnoybu.com."
+>
+  <PolicyArticle
+    eyebrow="Legal"
+    title="Terms & Policies"
+    updated={LEGAL_LAST_UPDATED}
+    sections={LEGAL_SECTIONS}
+  />
+</PageLayout>

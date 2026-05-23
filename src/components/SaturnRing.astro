@@ -1,0 +1,340 @@
+---
+import type { Project } from '~/data/projects';
+
+interface Props {
+  projects: Project[];
+}
+
+const { projects } = Astro.props;
+---
+<div class="saturn-stage-wrap">
+  <div
+    class="saturn-scene"
+    id="saturnScene"
+    tabindex="0"
+    role="group"
+    aria-label="Project ring — drag, click an icon, or use arrow keys"
+  >
+    {/* ring band — back half (behind the portrait) */}
+    <svg class="saturn-band is-back" id="bandBack" aria-hidden="true">
+      <ellipse class="band-glow"></ellipse>
+      <ellipse class="band-line--soft"></ellipse>
+      <ellipse class="band-line"></ellipse>
+    </svg>
+
+    {/* the planet */}
+    <div class="saturn-planet">
+      <div class="saturn-planet__sphere" aria-hidden="true"></div>
+      {/* body layer — clipped to the circle (the clean crop) */}
+      <div class="saturn-planet__crop">
+        <img
+          class="saturn-planet__photo"
+          src="/portrait.png"
+          alt="Ken Tannenbaum"
+        />
+      </div>
+      {/* head layer — same photo, top strip only, rises above the rim */}
+      <img
+        class="saturn-planet__head"
+        src="/portrait.png"
+        alt=""
+        aria-hidden="true"
+      />
+    </div>
+
+    {/* ring band — front half (clipped, in front of the portrait) */}
+    <svg class="saturn-band is-front" id="bandFront" aria-hidden="true">
+      <ellipse class="band-glow"></ellipse>
+      <ellipse class="band-line--soft"></ellipse>
+      <ellipse class="band-line"></ellipse>
+    </svg>
+
+    {/* icons riding the ring */}
+    <div class="saturn-orbit" id="saturnOrbit">
+      {projects.map((p, i) => (
+        <div
+          class="saturn-node"
+          data-index={i}
+          data-name={p.name}
+          data-tag={p.tag}
+          data-blurb={p.blurb}
+          data-details={p.details ?? ''}
+          data-url={p.url ?? ''}
+        >
+          <div class="saturn-node__disc">{p.monogram}</div>
+          <div class="saturn-node__label">{p.name}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div class="saturn-detail" id="saturnDetail">
+    <p class="saturn-detail__tag" id="detailTag"></p>
+    <h2 class="saturn-detail__name" id="detailName"></h2>
+    <p class="saturn-detail__blurb" id="detailBlurb"></p>
+  </div>
+
+  {/* expanded project view — overlays the faded ring */}
+  <div class="project-detail" id="projectDetail" aria-hidden="true">
+    <button class="project-detail__back" id="detailBack" type="button">
+      &larr;&nbsp;Back to the system
+    </button>
+    <p class="project-detail__tag" id="pdTag"></p>
+    <h2 class="project-detail__name" id="pdName"></h2>
+    <div class="project-detail__body" id="pdBody"></div>
+    <a
+      class="project-detail__visit"
+      id="pdVisit"
+      target="_blank"
+      rel="noopener"
+    ></a>
+  </div>
+</div>
+
+{/* Static fallback — reduced-motion, narrow screens, no-JS. */}
+<div class="fallback-grid">
+  <div class="fallback-grid__items">
+    {projects.map((p) => (
+      <a class="fallback-card" href={p.url ?? '#'}>
+        <p class="fallback-card__tag">{p.tag}</p>
+        <p class="fallback-card__name">{p.name}</p>
+        <p class="fallback-card__blurb">{p.blurb}</p>
+      </a>
+    ))}
+  </div>
+</div>
+
+<script>
+  const scene = document.getElementById('saturnScene');
+  const orbit = document.getElementById('saturnOrbit');
+  const bandBack = document.getElementById('bandBack');
+  const bandFront = document.getElementById('bandFront');
+  const detail = document.getElementById('saturnDetail');
+  const dTag = document.getElementById('detailTag');
+  const dName = document.getElementById('detailName');
+  const dBlurb = document.getElementById('detailBlurb');
+  const stage = document.querySelector<HTMLElement>('.saturn-stage-wrap');
+  const projectDetail = document.getElementById('projectDetail');
+  const detailBack = document.getElementById('detailBack');
+  const pdTag = document.getElementById('pdTag');
+  const pdName = document.getElementById('pdName');
+  const pdBody = document.getElementById('pdBody');
+  const pdVisit = document.getElementById('pdVisit');
+
+  if (
+    scene && orbit && bandBack && bandFront &&
+    detail && dTag && dName && dBlurb &&
+    stage && projectDetail && detailBack &&
+    pdTag && pdName && pdBody && pdVisit
+  ) {
+    const nodes = Array.from(
+      orbit.querySelectorAll<HTMLElement>('.saturn-node'),
+    );
+    const N = nodes.length;
+    const TAU = Math.PI * 2;
+    const TILT_DEG = -23; // ring tilt — like Saturn's actual ring
+    const TILT = (TILT_DEG * Math.PI) / 180;
+    const cosT = Math.cos(TILT);
+    const sinT = Math.sin(TILT);
+    const reduced = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+
+    let cx = 0, cy = 0, rx = 0, ry = 0;
+    let spin = Math.PI / 2; // node 0 starts at front (bottom)
+    let target: number | null = null;
+    let dragging = false;
+    let pointerInside = false;
+    let startX = 0, startSpin = 0, moved = 0;
+    let active = -1;
+
+    const setEllipse = (
+      el: Element | null,
+      ex: number, ey: number, erx: number, ery: number,
+    ) => {
+      if (!el) return;
+      el.setAttribute('cx', String(ex));
+      el.setAttribute('cy', String(ey));
+      el.setAttribute('rx', String(erx));
+      el.setAttribute('ry', String(ery));
+    };
+
+    const layout = () => {
+      const r = scene.getBoundingClientRect();
+      const W = r.width, H = r.height;
+      cx = W / 2;
+      cy = H / 2;
+      rx = Math.min(W * 0.42, 380);
+      ry = rx * 0.34;
+      for (const svg of [bandBack, bandFront]) {
+        svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+        svg.style.transform = `rotate(${TILT_DEG}deg)`;
+        const e = svg.querySelectorAll('ellipse');
+        setEllipse(e[0], cx, cy, rx, ry);
+        setEllipse(e[1], cx, cy, rx * 0.82, ry * 0.82);
+        setEllipse(e[2], cx, cy, rx, ry);
+      }
+    };
+
+    const place = () => {
+      for (let i = 0; i < N; i++) {
+        const theta = (i / N) * TAU + spin;
+        // point on the un-tilted ellipse, then rotate by the ring tilt
+        const px = rx * Math.cos(theta);
+        const py = ry * Math.sin(theta);
+        const x = cx + px * cosT - py * sinT;
+        const y = cy + px * sinT + py * cosT;
+        const depth = (Math.sin(theta) + 1) / 2; // 0 back .. 1 front
+        const scale = 0.62 + 0.46 * depth;
+        const n = nodes[i];
+        n.style.transform =
+          `translate(calc(${x.toFixed(1)}px - 50%), calc(${y.toFixed(1)}px - 50%)) scale(${scale.toFixed(3)})`;
+        n.style.opacity = (0.4 + 0.6 * depth).toFixed(3);
+        n.style.zIndex = depth >= 0.5 ? '11' : '4';
+      }
+    };
+
+    const frontIndex = () => {
+      const idx = Math.round(((Math.PI / 2 - spin) / TAU) * N);
+      return ((idx % N) + N) % N;
+    };
+
+    const swap = (node: HTMLElement) => {
+      detail.classList.add('is-swapping');
+      window.setTimeout(() => {
+        dName.textContent = node.dataset.name || '';
+        dTag.textContent = node.dataset.tag || '';
+        dBlurb.textContent = node.dataset.blurb || '';
+        detail.classList.remove('is-swapping');
+      }, 160);
+    };
+
+    const refreshActive = () => {
+      const idx = frontIndex();
+      if (idx === active) return;
+      active = idx;
+      nodes.forEach((n, i) => n.classList.toggle('is-active', i === idx));
+      swap(nodes[idx]);
+    };
+
+    const snapTo = (i: number) => {
+      let t = Math.PI / 2 - (i / N) * TAU;
+      while (t - spin > Math.PI) t -= TAU;
+      while (t - spin < -Math.PI) t += TAU;
+      target = t;
+    };
+
+    // ── project detail view ──────────────────────────────────
+    const openDetail = (node: HTMLElement) => {
+      pdTag.textContent = node.dataset.tag || '';
+      pdName.textContent = node.dataset.name || '';
+      pdBody.textContent =
+        node.dataset.details || node.dataset.blurb || '';
+      const url = node.dataset.url;
+      if (url) {
+        pdVisit.setAttribute('href', url);
+        try {
+          pdVisit.textContent =
+            new URL(url).hostname.replace(/^www\./, '') + '  →';
+        } catch {
+          pdVisit.textContent = 'Visit →';
+        }
+        pdVisit.hidden = false;
+      } else {
+        pdVisit.hidden = true;
+      }
+      stage.classList.add('is-detail');
+      projectDetail.setAttribute('aria-hidden', 'false');
+      detailBack.focus();
+    };
+
+    const closeDetail = () => {
+      stage.classList.remove('is-detail');
+      projectDetail.setAttribute('aria-hidden', 'true');
+      scene.focus();
+    };
+
+    const frame = () => {
+      if (dragging) {
+        // spin updated by pointermove
+      } else if (target !== null) {
+        spin += (target - spin) * 0.16;
+        if (Math.abs(target - spin) < 0.0015) {
+          spin = target;
+          target = null;
+        }
+      } else if (!pointerInside && !reduced) {
+        spin -= 0.0014; // idle drift — slow, reversed
+      }
+      place();
+      refreshActive();
+      requestAnimationFrame(frame);
+    };
+
+    layout();
+    place();
+    refreshActive();
+    requestAnimationFrame(frame);
+
+    window.addEventListener('resize', () => {
+      layout();
+      place();
+    });
+
+    scene.addEventListener('pointerenter', () => { pointerInside = true; });
+    scene.addEventListener('pointerleave', () => { pointerInside = false; });
+
+    // NB: no setPointerCapture — capturing the pointer on the scene steals
+    // the `click` event from the icons. Drag moves are tracked on `window`
+    // so a drag still works if the pointer leaves the scene.
+    scene.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      moved = 0;
+      target = null;
+      startX = e.clientX;
+      startSpin = spin;
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > moved) moved = Math.abs(dx);
+      spin = startSpin - dx * 0.006; // ring follows the hand
+    });
+    const endDrag = () => {
+      if (!dragging) return;
+      dragging = false;
+      snapTo(frontIndex());
+    };
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+
+    nodes.forEach((node, i) => {
+      node.addEventListener('click', () => {
+        if (moved > 6) return; // was a drag
+        if (i === active) {
+          openDetail(node);
+        } else {
+          snapTo(i);
+        }
+      });
+    });
+
+    detailBack.addEventListener('click', closeDetail);
+
+    scene.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        snapTo(active + 1);
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        snapTo(active - 1);
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && stage.classList.contains('is-detail')) {
+        closeDetail();
+      }
+    });
+  }
+</script>

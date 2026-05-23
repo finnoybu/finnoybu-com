@@ -1,0 +1,23 @@
+---
+// Layout for content sub-pages (about, contact, legal, privacy-policy).
+// Wraps BaseLayout's document shell with a home-link header and the shared
+// site footer. The home page uses BaseLayout directly instead.
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import SiteHeader from '~/components/SiteHeader.astro';
+import SiteFooter from '~/components/SiteFooter.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+const pageTitle = `${title} · Ken Tannenbaum`;
+---
+<BaseLayout title={pageTitle} description={description}>
+  <SiteHeader />
+  <main class="content-main">
+    <slot />
+  </main>
+  <SiteFooter />
+</BaseLayout>
