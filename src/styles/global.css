@@ -33,6 +33,8 @@ body {
   background: var(--bg);
   color: var(--ink);
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* starfield — inline SVG in the DOM so its twinkle animation runs */
@@ -89,6 +91,107 @@ a { color: inherit; }
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTENT SUB-PAGES — about, contact, legal, privacy-policy.
+   The home page keeps its own scoped styles; these are the
+   shared chrome + reading surface for the text pages.
+   ═══════════════════════════════════════════════════════════ */
+.content-main {
+  flex: 1;
+}
+
+.page-shell {
+  width: 100%;
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 7vh, 4.5rem) 1.5rem clamp(3rem, 9vh, 6rem);
+}
+
+.page-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2.1rem, 5.2vw, 3.1rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0.9rem 0 0;
+}
+
+.page-updated {
+  margin: 0.85rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-faint);
+}
+
+/* ── Prose — the reading surface for long-form text ─────────── */
+.prose {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 1.08rem;
+  line-height: 1.75;
+  color: var(--ink-muted);
+  text-wrap: pretty;
+}
+.prose > p:first-child {
+  margin-top: 0;
+}
+.prose p {
+  margin: 1.1em 0 0;
+}
+.prose h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.55rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ink);
+  margin: 2.4em 0 0;
+}
+.prose h3 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 1.8em 0 0;
+}
+.prose section {
+  scroll-margin-top: 2rem;
+}
+.prose section + section {
+  margin-top: 2.6em;
+}
+.prose section > h2:first-child {
+  margin-top: 0;
+}
+.prose ul,
+.prose ol {
+  margin: 1.1em 0 0;
+  padding-left: 1.4em;
+}
+.prose ul { list-style: disc; }
+.prose ol { list-style: decimal; }
+.prose li { margin-top: 0.4em; }
+.prose strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+.prose em { font-style: italic; }
+.prose a {
+  color: var(--accent-hi);
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 0.18em;
+  transition: text-decoration-color 0.18s ease;
+}
+.prose a:hover {
+  text-decoration-color: var(--accent-hi);
+}
+.prose code {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.86em;
+  background: var(--bg-elev);
+  padding: 0.12em 0.4em;
+  border-radius: 4px;
 }
 
 /* ═══════════════════════════════════════════════════════════

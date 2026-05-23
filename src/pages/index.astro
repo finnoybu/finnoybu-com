@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import SaturnRing from '~/components/SaturnRing.astro';
+import SiteFooter from '~/components/SiteFooter.astro';
 import { PROJECTS } from '~/data/projects';
 ---
 <BaseLayout>
@@ -13,25 +14,17 @@ import { PROJECTS } from '~/data/projects';
     </header>
 
     <SaturnRing projects={PROJECTS} />
-
-    <footer class="site-footer">
-      <span class="site-footer__mark">finnoybu.com</span>
-      <span class="site-footer__links">
-        <a href="https://github.com/finnoybu">github</a>
-        <a href="mailto:hello@finnoybu.com">hello@finnoybu.com</a>
-      </span>
-    </footer>
   </main>
+
+  <SiteFooter />
 </BaseLayout>
 
 <style>
   .page {
+    width: 100%;
     max-width: 72rem;
     margin: 0 auto;
     padding: 0 1.5rem;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
   }
 
   .hero {
@@ -65,25 +58,4 @@ import { PROJECTS } from '~/data/projects';
     font-size: 1.02rem;
     color: var(--ink-muted);
   }
-
-  .site-footer {
-    margin-top: auto;
-    padding: 2rem 0 2.5rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.78rem;
-    color: var(--ink-faint);
-    border-top: 1px solid var(--rule);
-  }
-  .site-footer a {
-    color: var(--ink-muted);
-    text-decoration: none;
-    margin-left: 1.25rem;
-    transition: color 0.2s ease;
-  }
-  .site-footer a:first-child { margin-left: 0; }
-  .site-footer a:hover { color: var(--accent-hi); }
 </style>

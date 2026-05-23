@@ -1,0 +1,76 @@
+---
+// Renders an ingested set of policy sections (Legal or Privacy) with an
+// on-page table of contents. The content comes from src/data/legal.ts; this
+// component supplies only the finnoybu.com presentation.
+import type { PolicySection } from '~/data/privacy';
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  updated: string;
+  sections: PolicySection[];
+}
+
+const { eyebrow, title, updated, sections } = Astro.props;
+---
+<article class="page-shell">
+  <p class="eyebrow">{eyebrow}</p>
+  <h1 class="page-title">{title}</h1>
+  <p class="page-updated">Last updated: {updated}</p>
+
+  <nav class="policy-toc" aria-label="On this page">
+    <p class="policy-toc__label">On this page</p>
+    <ul>
+      {sections.map((section) => (
+        <li><a href={`#${section.id}`}>{section.heading}</a></li>
+      ))}
+    </ul>
+  </nav>
+
+  <div class="prose policy-body">
+    {sections.map((section) => (
+      <section id={section.id}>
+        <h2>{section.heading}</h2>
+        {section.body.map((html) => <Fragment set:html={html} />)}
+      </section>
+    ))}
+  </div>
+</article>
+
+<style>
+  .policy-toc {
+    margin-top: 2.5rem;
+    padding: 1.35rem 1.5rem;
+    background: var(--bg-elev);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+  }
+  .policy-toc__label {
+    margin: 0 0 0.7rem;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.64rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .policy-toc ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.4rem;
+  }
+  .policy-toc a {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.9rem;
+    color: var(--accent-hi);
+    text-decoration: none;
+  }
+  .policy-toc a:hover {
+    text-decoration: underline;
+  }
+  .policy-body {
+    margin-top: 2.75rem;
+  }
+</style>
