@@ -1,0 +1,148 @@
+---
+// Minimal test sign-in page for Phase 1 of the central auth migration.
+// Triggers the Better Auth Google OAuth flow; the handler at /api/auth/...
+// completes the callback and sets the `.finnoybu.com` session cookie.
+// The page reads /api/auth/get-session client-side to display current status.
+
+export const prerender = true;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Sign in · finnoybu.com</title>
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..600&family=Inter:wght@400..700&display=swap"
+    />
+    <style>
+      :root {
+        --bg: #0d1626;
+        --bg-elev: #16233c;
+        --ink: #e9eef8;
+        --ink-muted: #97a8c4;
+        --ink-faint: #5b6c89;
+        --rule: #273349;
+        --accent: #4f93d6;
+        --accent-hi: #7fb6ec;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: 'Inter', system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      main {
+        max-width: 28rem;
+        text-align: center;
+        padding: 2rem;
+      }
+      h1 {
+        font-family: 'Fraunces', Georgia, serif;
+        font-weight: 500;
+        font-size: 2.4rem;
+        margin: 0 0 0.5rem;
+      }
+      .eyebrow {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 1.1rem;
+      }
+      .status {
+        margin: 0 0 2rem;
+        padding: 0.75rem 1rem;
+        background: var(--bg-elev);
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        font-size: 0.92rem;
+        color: var(--ink-muted);
+        font-family: 'Inter', system-ui, sans-serif;
+      }
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      a.btn {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: background 0.18s ease, color 0.18s ease;
+      }
+      a.primary {
+        background: var(--accent);
+        color: var(--bg);
+      }
+      a.primary:hover {
+        background: var(--accent-hi);
+      }
+      a.secondary {
+        color: var(--ink-muted);
+        border: 1px solid var(--rule);
+      }
+      a.secondary:hover {
+        color: var(--accent-hi);
+        border-color: var(--accent-hi);
+      }
+      footer {
+        margin-top: 2.5rem;
+        font-size: 0.74rem;
+        color: var(--ink-faint);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Phase 1 test</p>
+      <h1>Sign in</h1>
+      <p id="status" class="status">Loading session…</p>
+      <div class="actions">
+        <a class="btn primary" href="/api/auth/sign-in/social/google?callbackURL=/sign-in">
+          Sign in with Google
+        </a>
+        <a class="btn secondary" href="/api/auth/sign-out?callbackURL=/sign-in">
+          Sign out
+        </a>
+      </div>
+      <footer>
+        Cookie domain on this page tells you whether cross-subdomain works —
+        if it says <code>.finnoybu.com</code> after sign-in, fiction and memoirs
+        will see it too.
+      </footer>
+    </main>
+    <script is:inline>
+      fetch('/api/auth/get-session', { credentials: 'include' })
+        .then((r) => r.json())
+        .then((s) => {
+          const el = document.getElementById('status');
+          if (!el) return;
+          if (s && s.user) {
+            el.textContent = `Signed in as ${s.user.email} (id ${s.user.id})`;
+          } else {
+            el.textContent = 'Not signed in.';
+          }
+        })
+        .catch((err) => {
+          const el = document.getElementById('status');
+          if (el) el.textContent = `Session lookup failed: ${err.message}`;
+        });
+    </script>
+  </body>
+</html>
