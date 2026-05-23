@@ -5,13 +5,12 @@
 # Cloudflare Pages dashboard:
 #   Pages → finnoybu-com → Settings → Variables and Secrets
 #
-# D1 `finnoybu-com` is *shared* with fiction.finnoybu.com and
-# memoirs.finnoybu.com (same database_id; originally named `finnoybu-trilogy`
-# during the fiction migration, renamed once finnoybu.com became the central
-# host). One user row spans all three sites because cookies are set at
-# `.finnoybu.com`. The auth tables (user/session/account/verification) are
-# written by the central handler that lives here; fiction/memoirs hold the
-# reading-data tables in the same D1.
+# D1 `finnoybu-com` (uuid b84a5d8b-c080-4d7e-b9f8-c83af3ed6304) holds the
+# auth tables written by the central Better Auth handler in this repo.
+# fiction.finnoybu.com and memoirs.finnoybu.com still bind their own D1
+# (`finnoybu-trilogy`) for reading-data tables; Phase 3 of the central-auth
+# migration unifies the bindings. Cookies are scoped to `.finnoybu.com` so
+# the cookie carries across subdomains regardless of where sessions live.
 #
 # OAuth Client IDs are public per provider docs — they get embedded in OAuth
 # redirect URLs anyway. AWS access keys are treated as a credential pair, so
@@ -34,7 +33,7 @@ pages_build_output_dir = "./dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "finnoybu-com"
-database_id = "954d7506-aea2-4900-8f84-07f227466e59"
+database_id = "b84a5d8b-c080-4d7e-b9f8-c83af3ed6304"
 
 [vars]
 AWS_REGION = "us-east-1"
@@ -47,7 +46,7 @@ EMAIL_FROM = "Finnoybu.com <hello@finnoybu.com>"
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "finnoybu-com"
-database_id = "954d7506-aea2-4900-8f84-07f227466e59"
+database_id = "b84a5d8b-c080-4d7e-b9f8-c83af3ed6304"
 
 [env.production.vars]
 PUBLIC_SITE_URL = "https://finnoybu.com"
@@ -66,7 +65,7 @@ GOOGLE_CLIENT_ID = "753668982308-i3cvsardb34qcgkqau174uskn4aoqkn5.apps.googleuse
 [[env.preview.d1_databases]]
 binding = "DB"
 database_name = "finnoybu-com"
-database_id = "954d7506-aea2-4900-8f84-07f227466e59"
+database_id = "b84a5d8b-c080-4d7e-b9f8-c83af3ed6304"
 
 [env.preview.vars]
 PUBLIC_SITE_URL = ""
