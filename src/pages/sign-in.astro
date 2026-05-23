@@ -1,8 +1,9 @@
 ---
 // Minimal test sign-in page for Phase 1 of the central auth migration.
-// Triggers the Better Auth Google OAuth flow; the handler at /api/auth/...
-// completes the callback and sets the `.finnoybu.com` session cookie.
-// The page reads /api/auth/get-session client-side to display current status.
+// Triggers the Better Auth Google OAuth flow via
+// POST /api/auth/sign-in/social { provider, callbackURL } and redirects to
+// the returned OAuth URL. After Google round-trip, lands back here and shows
+// the session via GET /api/auth/get-session.
 
 export const prerender = true;
 ---
@@ -77,34 +78,43 @@ export const prerender = true;
         flex-direction: column;
         gap: 0.75rem;
       }
-      a.btn {
+      button.btn {
         display: inline-block;
         padding: 0.75rem 1.5rem;
         border-radius: 6px;
-        text-decoration: none;
         font-weight: 600;
         font-size: 0.95rem;
-        transition: background 0.18s ease, color 0.18s ease;
+        font-family: 'Inter', system-ui, sans-serif;
+        cursor: pointer;
+        transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
       }
-      a.primary {
+      button.primary {
         background: var(--accent);
         color: var(--bg);
+        border: none;
       }
-      a.primary:hover {
-        background: var(--accent-hi);
-      }
-      a.secondary {
+      button.primary:hover { background: var(--accent-hi); }
+      button.secondary {
+        background: transparent;
         color: var(--ink-muted);
         border: 1px solid var(--rule);
       }
-      a.secondary:hover {
+      button.secondary:hover {
         color: var(--accent-hi);
         border-color: var(--accent-hi);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: wait;
       }
       footer {
         margin-top: 2.5rem;
         font-size: 0.74rem;
         color: var(--ink-faint);
+      }
+      code {
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 0.88em;
       }
     </style>
   </head>
@@ -114,35 +124,80 @@ export const prerender = true;
       <h1>Sign in</h1>
       <p id="status" class="status">Loading session…</p>
       <div class="actions">
-        <a class="btn primary" href="/api/auth/sign-in/social/google?callbackURL=/sign-in">
+        <button id="signin-google" class="btn primary" type="button">
           Sign in with Google
-        </a>
-        <a class="btn secondary" href="/api/auth/sign-out?callbackURL=/sign-in">
+        </button>
+        <button id="signout" class="btn secondary" type="button">
           Sign out
-        </a>
+        </button>
       </div>
       <footer>
-        Cookie domain on this page tells you whether cross-subdomain works —
-        if it says <code>.finnoybu.com</code> after sign-in, fiction and memoirs
-        will see it too.
+        After sign-in, the cookie should attach to <code>.finnoybu.com</code> —
+        meaning fiction and memoirs see it too.
       </footer>
     </main>
     <script is:inline>
-      fetch('/api/auth/get-session', { credentials: 'include' })
-        .then((r) => r.json())
-        .then((s) => {
-          const el = document.getElementById('status');
-          if (!el) return;
+      const statusEl = document.getElementById('status');
+      const signinBtn = document.getElementById('signin-google');
+      const signoutBtn = document.getElementById('signout');
+
+      function setStatus(msg) {
+        statusEl.textContent = msg;
+      }
+
+      async function refreshSession() {
+        try {
+          const r = await fetch('/api/auth/get-session', { credentials: 'include' });
+          const s = await r.json();
           if (s && s.user) {
-            el.textContent = `Signed in as ${s.user.email} (id ${s.user.id})`;
+            setStatus('Signed in as ' + s.user.email + ' (id ' + s.user.id + ')');
           } else {
-            el.textContent = 'Not signed in.';
+            setStatus('Not signed in.');
           }
-        })
-        .catch((err) => {
-          const el = document.getElementById('status');
-          if (el) el.textContent = `Session lookup failed: ${err.message}`;
-        });
+        } catch (err) {
+          setStatus('Session lookup failed: ' + err.message);
+        }
+      }
+
+      signinBtn.addEventListener('click', async () => {
+        signinBtn.disabled = true;
+        setStatus('Starting Google OAuth…');
+        try {
+          const res = await fetch('/api/auth/sign-in/social', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ provider: 'google', callbackURL: '/sign-in' }),
+          });
+          const data = await res.json();
+          if (data && data.url) {
+            window.location.href = data.url;
+          } else {
+            setStatus('Sign-in failed: ' + JSON.stringify(data));
+            signinBtn.disabled = false;
+          }
+        } catch (err) {
+          setStatus('Sign-in error: ' + err.message);
+          signinBtn.disabled = false;
+        }
+      });
+
+      signoutBtn.addEventListener('click', async () => {
+        signoutBtn.disabled = true;
+        try {
+          await fetch('/api/auth/sign-out', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            credentials: 'include',
+          });
+        } catch (err) {
+          // fall through to refresh; sign-out failure shows as still-signed-in
+        }
+        await refreshSession();
+        signoutBtn.disabled = false;
+      });
+
+      refreshSession();
     </script>
   </body>
 </html>
