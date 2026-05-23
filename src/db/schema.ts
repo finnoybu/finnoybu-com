@@ -1,12 +1,12 @@
-// Drizzle schema — auth tables only. This is the central auth host;
-// fiction.finnoybu.com and memoirs.finnoybu.com bind the same D1
-// (`finnoybu-com`) and own the reading-data tables (reading_progress /
-// bookmarks / annotations / errata_reports / purchases) authored in the
-// finnoybu-trilogy repo.
+// Drizzle schema — auth tables for the central Better Auth handler.
+// Lives in the `finnoybu-com` D1. fiction.finnoybu.com and
+// memoirs.finnoybu.com still bind their own D1 (`finnoybu-trilogy`) with
+// their reading-data tables (reading_progress / bookmarks / annotations /
+// errata_reports / purchases) authored in the finnoybu-trilogy repo;
+// Phase 3 of the central-auth migration unifies the bindings.
 //
-// One user row spans all three sites because cookies are set at
-// `.finnoybu.com`. The Better Auth catch-all on finnoybu.com writes to the
-// tables below; everything else reads via the shared cookie.
+// Cookies are scoped to `.finnoybu.com` so the cookie carries across
+// subdomains regardless of where sessions live.
 
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 
