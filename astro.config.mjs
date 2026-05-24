@@ -17,6 +17,18 @@ export default defineConfig({
   build: {
     format: 'directory',
   },
+  // Disable Astro's blanket cross-origin POST block. Sign in with Apple uses
+  // response_mode=form_post — appleid.apple.com cross-site POSTs the OAuth
+  // result to /api/auth/callback/apple. Astro 5's security.checkOrigin
+  // (default true) intercepts that with a 403 before our handler runs, even
+  // though it's the legitimate OAuth callback. The only routes that accept
+  // POST on this site are under /api/auth/*, which is Better Auth — and
+  // Better Auth runs its own CSRF defense (validateFormCsrf + trustedOrigins
+  // + signed state cookie matched against the OAuth state param), so we
+  // aren't losing CSRF protection by turning Astro's blanket guard off.
+  security: {
+    checkOrigin: false,
+  },
   integrations: [
     sitemap(),
     tailwind({ applyBaseStyles: false }),
