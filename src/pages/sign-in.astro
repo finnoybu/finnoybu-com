@@ -124,8 +124,17 @@ export const prerender = true;
       <h1>Sign in</h1>
       <p id="status" class="status">Loading session…</p>
       <div class="actions">
-        <button id="signin-google" class="btn primary" type="button">
+        <button data-provider="google" class="btn primary signin" type="button">
           Sign in with Google
+        </button>
+        <button data-provider="facebook" class="btn primary signin" type="button">
+          Sign in with Facebook
+        </button>
+        <button data-provider="github" class="btn primary signin" type="button">
+          Sign in with GitHub
+        </button>
+        <button data-provider="apple" class="btn primary signin" type="button">
+          Sign in with Apple
         </button>
         <button id="signout" class="btn secondary" type="button">
           Sign out
@@ -138,11 +147,15 @@ export const prerender = true;
     </main>
     <script is:inline>
       const statusEl = document.getElementById('status');
-      const signinBtn = document.getElementById('signin-google');
+      const signinBtns = document.querySelectorAll('.signin');
       const signoutBtn = document.getElementById('signout');
 
       function setStatus(msg) {
         statusEl.textContent = msg;
+      }
+
+      function setBtnsDisabled(disabled) {
+        signinBtns.forEach((b) => { b.disabled = disabled; });
       }
 
       async function refreshSession() {
@@ -159,27 +172,30 @@ export const prerender = true;
         }
       }
 
-      signinBtn.addEventListener('click', async () => {
-        signinBtn.disabled = true;
-        setStatus('Starting Google OAuth…');
-        try {
-          const res = await fetch('/api/auth/sign-in/social', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ provider: 'google', callbackURL: '/sign-in' }),
-          });
-          const data = await res.json();
-          if (data && data.url) {
-            window.location.href = data.url;
-          } else {
-            setStatus('Sign-in failed: ' + JSON.stringify(data));
-            signinBtn.disabled = false;
+      signinBtns.forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const provider = btn.dataset.provider;
+          setBtnsDisabled(true);
+          setStatus('Starting ' + provider + ' OAuth…');
+          try {
+            const res = await fetch('/api/auth/sign-in/social', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ provider, callbackURL: '/sign-in' }),
+            });
+            const data = await res.json();
+            if (data && data.url) {
+              window.location.href = data.url;
+            } else {
+              setStatus('Sign-in failed (' + provider + '): ' + JSON.stringify(data));
+              setBtnsDisabled(false);
+            }
+          } catch (err) {
+            setStatus('Sign-in error (' + provider + '): ' + err.message);
+            setBtnsDisabled(false);
           }
-        } catch (err) {
-          setStatus('Sign-in error: ' + err.message);
-          signinBtn.disabled = false;
-        }
+        });
       });
 
       signoutBtn.addEventListener('click', async () => {
