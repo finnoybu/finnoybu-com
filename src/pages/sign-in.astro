@@ -172,31 +172,53 @@ export const prerender = true;
         }
       }
 
-      signinBtns.forEach((btn) => {
-        btn.addEventListener('click', async () => {
-          const provider = btn.dataset.provider;
-          setBtnsDisabled(true);
-          setStatus('Starting ' + provider + ' OAuth…');
-          try {
-            const res = await fetch('/api/auth/sign-in/social', {
-              method: 'POST',
-              headers: { 'content-type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ provider, callbackURL: '/sign-in' }),
-            });
-            const data = await res.json();
-            if (data && data.url) {
-              window.location.href = data.url;
-            } else {
-              setStatus('Sign-in failed (' + provider + '): ' + JSON.stringify(data));
-              setBtnsDisabled(false);
-            }
-          } catch (err) {
-            setStatus('Sign-in error (' + provider + '): ' + err.message);
+      // Shared OAuth starter — used by manual button clicks AND by the
+      // auto-fire path that fiction/memoirs use when they redirect users
+      // here for OAuth (since GitHub/Apple require single-callback registration
+      // on finnoybu.com, all OAuth runs through this page).
+      async function startOAuth(provider, callbackURL) {
+        setBtnsDisabled(true);
+        setStatus('Starting ' + provider + ' OAuth…');
+        try {
+          const res = await fetch('/api/auth/sign-in/social', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ provider, callbackURL }),
+          });
+          const data = await res.json();
+          if (data && data.url) {
+            window.location.href = data.url;
+          } else {
+            setStatus('Sign-in failed (' + provider + '): ' + JSON.stringify(data));
             setBtnsDisabled(false);
           }
+        } catch (err) {
+          setStatus('Sign-in error (' + provider + '): ' + err.message);
+          setBtnsDisabled(false);
+        }
+      }
+
+      signinBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          startOAuth(btn.dataset.provider, '/sign-in');
         });
       });
+
+      // Auto-fire when caller passed `?provider=...&callbackURL=...` in the URL.
+      // Caller (fiction/memoirs AuthModal) only sends trusted callbackURLs;
+      // Better Auth additionally validates against trustedOrigins server-side
+      // and rejects anything not on the allow-list, so a hostile callbackURL
+      // can't trick the OAuth flow into landing the user on an attacker site.
+      (function maybeAutoFire() {
+        const params = new URLSearchParams(window.location.search);
+        const provider = params.get('provider');
+        if (!provider) return;
+        const callbackURL = params.get('callbackURL') || '/sign-in';
+        // Skip refreshSession's "Not signed in." flash before the redirect.
+        setStatus('Redirecting to ' + provider + '…');
+        startOAuth(provider, callbackURL);
+      })();
 
       signoutBtn.addEventListener('click', async () => {
         signoutBtn.disabled = true;
