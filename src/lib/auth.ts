@@ -212,6 +212,21 @@ export function createAuth({
               sameSite: 'lax' as const,
               secure: true,
             },
+            // Apple's Sign In uses response_mode=form_post — Apple POSTs back
+            // from appleid.apple.com cross-site to our callback. SameSite=Lax
+            // strips the state cookie on that POST, which makes Better Auth's
+            // CSRF middleware reject the request as a cross-site form
+            // submission. SameSite=None lets the state cookie survive; the
+            // actual CSRF protection comes from the random state value being
+            // compared against the cookie's encrypted contents, not from
+            // SameSite. Session cookie stays SameSite=Lax (the default).
+            cookies: {
+              state: {
+                attributes: {
+                  sameSite: 'none' as const,
+                },
+              },
+            },
           },
         }
       : {}),
