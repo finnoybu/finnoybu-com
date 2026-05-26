@@ -41,9 +41,9 @@ export const PROJECTS: Project[] = [
     monogram: 'FT',
     tag: 'Fiction',
     blurb:
-      'A Norse fantasy trilogy written as E. A. Westbo. Book I, Salt and Silence, is complete; Books II and III are drafted.',
+      'A Norse fantasy trilogy written as E. A. Westbo. Book I (Salt and Silence) and Book II (The Long Return) are complete; Book III is drafted.',
     details:
-      'The Finnoybu Trilogy is a three-book Norse fantasy series, written under the pen name E. A. Westbo. Book I, Salt and Silence, is complete and prepared for print; Books II and III are drafted.',
+      'The Finnoybu Trilogy is a three-book Norse fantasy series, written under the pen name E. A. Westbo. Book I, Salt and Silence, and Book II, The Long Return, are complete and readable in full at fiction.finnoybu.com. Book III, Drawer of Vows, is drafted.',
     url: 'https://fiction.finnoybu.com',
   },
   {
