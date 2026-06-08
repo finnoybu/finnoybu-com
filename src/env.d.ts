@@ -1,8 +1,11 @@
 /// <reference path="../.astro/types.d.ts" />
 /// <reference types="@cloudflare/workers-types" />
 
-// Cloudflare bindings + env vars surfaced via Astro.locals.runtime.env on
-// SSR requests. Mirrors the production schema of `wrangler.toml`.
+type Runtime = import('@astrojs/cloudflare').Runtime;
+
+// Cloudflare bindings + env vars. Accessed at runtime via
+// `import { env } from 'cloudflare:workers'` (Astro v6 / adapter v13+);
+// mirrors the production schema of `wrangler.toml`.
 type Env = {
   DB: D1Database;
 
@@ -30,11 +33,15 @@ type Env = {
   PUBLIC_SITE_URL?: string;
 };
 
+// Augment cloudflare:workers to expose typed env bindings (Astro v6 / adapter v13+)
+declare module 'cloudflare:workers' {
+  const env: Env;
+  export { env };
+}
+
 declare namespace App {
-  interface Locals {
-    runtime: {
-      env: Env;
-    };
+  interface Locals extends Runtime {
+    // Set by middleware on every non-prerendered request.
     user: { id: string; email: string; name: string | null } | null;
   }
 }

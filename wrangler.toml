@@ -1,83 +1,60 @@
-# Cloudflare Pages configuration for finnoybu.com.
+# Cloudflare WORKERS configuration for finnoybu.com (apex).
 #
-# Source of truth for non-secret config. True secrets (BETTER_AUTH_SECRET,
-# all *_CLIENT_SECRETs, AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY) live in the
-# Cloudflare Pages dashboard:
-#   Pages → finnoybu-com → Settings → Variables and Secrets
+# Migrated from Cloudflare Pages → Workers 2026-06 (CF Pages deprecated
+# Apr 2025; @astrojs/cloudflare v13 is Workers-only). This file is the source
+# of truth for non-secret config and bindings. `astro build` (adapter v13)
+# emits dist/client (static assets) + dist/server (the worker), and the
+# adapter merges the bindings below into its generated config.
 #
-# D1 `finnoybu-com` (uuid b84a5d8b-c080-4d7e-b9f8-c83af3ed6304) is the central
-# database for the *.finnoybu.com family. The auth tables
-# (user/session/account/verification) are written by the central handler that
-# lives here; the reading-data tables (reading_progress / bookmarks /
-# annotations / errata_reports / purchases) live in the same D1 and are owned
-# by fiction.finnoybu.com and memoirs.finnoybu.com (schema authored in the
-# finnoybu-trilogy repo). Cookies are scoped to `.finnoybu.com` so one user
-# row spans all three sites.
+# Secrets live on the Worker, NOT here. Set them with `wrangler secret put`
+# (or dashboard → Workers & Pages → finnoybu → Settings → Variables and
+# Secrets): BETTER_AUTH_SECRET, all four *_CLIENT_SECRET, AWS_ACCESS_KEY_ID,
+# AWS_SECRET_ACCESS_KEY. BETTER_AUTH_SECRET MUST equal fiction's + memoirs' so
+# `.finnoybu.com` cookies stay valid across all three subdomains.
 #
-# This DB replaces the legacy `finnoybu-trilogy` D1, which is being retired
-# once fiction + memoirs rebind to finnoybu-com.
+# D1 `finnoybu-com` (b84a5d8b-…) is the CENTRAL database for the *.finnoybu.com
+# family. The auth tables (user/session/account/verification) are written by the
+# central Better Auth handler that lives here; the reading-data tables live in
+# the same D1, owned by fiction + memoirs (schema authored in finnoybu-trilogy).
 #
-# OAuth Client IDs are public per provider docs — they get embedded in OAuth
-# redirect URLs anyway. AWS access keys are treated as a credential pair, so
-# both halves stay encrypted in the dashboard.
+# OAuth Client IDs are public (embedded in OAuth redirect URLs), so they stay
+# here as vars; the matching *_CLIENT_SECRET values are Worker secrets.
 #
-# Cloudflare Pages quirk: once any [env.<name>.*] block exists, Pages treats
-# "production" as a named environment that does NOT auto-inherit top-level
-# bindings. So [[d1_databases]] is repeated explicitly inside each environment
-# block. Top-level declarations stay only as a fallback for `wrangler dev`
-# (which DOES inherit them).
+# Worker is named "finnoybu" (not "finnoybu-com") because the old Pages project
+# still holds that name during cutover.
+#
+# Workers note: named environments ([env.<name>]) create SEPARATE workers, so
+# unlike the old Pages config we keep a single top-level (= production) config.
+# Preview/branch deploys use Worker version-preview URLs, not a named env.
 
-name = "finnoybu-com"
+name = "finnoybu"
 compatibility_date = "2026-05-16"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = "./dist"
 
-## Top-level: used by wrangler dev / wrangler d1 commands, NOT by Pages
-## production (which reads only from the [env.production] block below).
+# NOTE: `main` and `[assets]` are intentionally NOT set here. The @astrojs/
+# cloudflare adapter generates the deploy config (dist/server/wrangler.json)
+# with the correct worker entry + assets binding at build time. This root
+# file only supplies bindings/vars (consumed by the adapter + `wrangler dev`).
+# Deploy reads the generated config: `wrangler deploy -c dist/server/wrangler.json`.
 
 [[d1_databases]]
 binding = "DB"
 database_name = "finnoybu-com"
 database_id = "b84a5d8b-c080-4d7e-b9f8-c83af3ed6304"
 
+# Astro v6 / adapter v13 auto-enables sessions backed by a KV namespace bound
+# as SESSION. This app uses Better Auth (sessions in D1) and never calls
+# Astro.session, so this namespace is effectively unused — it just satisfies
+# the adapter. We intentionally REUSE the shared throwaway "SESSION" namespace
+# (also bound by the memoirs Worker); no session data is ever written to it, so
+# sharing is harmless and avoids minting a redundant namespace.
+[[kv_namespaces]]
+binding = "SESSION"
+id = "64e0cfcb9ca64c77baf6df3ef4b9ce56"
+
 [vars]
-AWS_REGION = "us-east-1"
-EMAIL_FROM = "Finnoybu.com <hello@finnoybu.com>"
-
-## ═══════════════════════════════════════════════════════════════════════════
-## PRODUCTION — finnoybu.com (apex)
-## ═══════════════════════════════════════════════════════════════════════════
-
-[[env.production.d1_databases]]
-binding = "DB"
-database_name = "finnoybu-com"
-database_id = "b84a5d8b-c080-4d7e-b9f8-c83af3ed6304"
-
-[env.production.vars]
 PUBLIC_SITE_URL = "https://finnoybu.com"
 COOKIE_DOMAIN = ".finnoybu.com"
-AWS_REGION = "us-east-1"
-EMAIL_FROM = "Finnoybu.com <hello@finnoybu.com>"
-GOOGLE_CLIENT_ID = "753668982308-i3cvsardb34qcgkqau174uskn4aoqkn5.apps.googleusercontent.com"
-FACEBOOK_CLIENT_ID = "4365482573696462"
-APPLE_CLIENT_ID = "finnoybu-com"
-GITHUB_CLIENT_ID = "Ov23li4nADGWGLvpGzKO"
-
-## ═══════════════════════════════════════════════════════════════════════════
-## PREVIEW — per-deploy *.finnoybu-com.pages.dev hashes. PUBLIC_SITE_URL and
-## COOKIE_DOMAIN stay empty so src/lib/env's request-origin fallback resolves
-## to the per-hash hostname and cookies don't try to attach to .finnoybu.com
-## (which a .pages.dev host can't share with anyway).
-## ═══════════════════════════════════════════════════════════════════════════
-
-[[env.preview.d1_databases]]
-binding = "DB"
-database_name = "finnoybu-com"
-database_id = "b84a5d8b-c080-4d7e-b9f8-c83af3ed6304"
-
-[env.preview.vars]
-PUBLIC_SITE_URL = ""
-COOKIE_DOMAIN = ""
 AWS_REGION = "us-east-1"
 EMAIL_FROM = "Finnoybu.com <hello@finnoybu.com>"
 GOOGLE_CLIENT_ID = "753668982308-i3cvsardb34qcgkqau174uskn4aoqkn5.apps.googleusercontent.com"

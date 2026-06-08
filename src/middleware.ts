@@ -41,9 +41,9 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
 
   if (ctx.isPrerendered) return next();
 
-  const env = getEnv(ctx);
+  const env = getEnv();
 
-  if (!isDbConfigured(ctx) || !isAuthConfigured(env)) {
+  if (!isDbConfigured() || !isAuthConfigured(env)) {
     if (!warnedMissingConfig) {
       console.warn(
         '[middleware] D1 or BETTER_AUTH_SECRET not configured; auth disabled.',
