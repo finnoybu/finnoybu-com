@@ -204,9 +204,15 @@ export function createAuth({
         },
       }),
     ],
-    ...(cookieDomain
-      ? {
-          advanced: {
+    advanced: {
+      // Workers doesn't expose a client IP to Better Auth by default, so its
+      // rate limiting silently no-ops ("could not determine client IP").
+      // Cloudflare always forwards the real IP in cf-connecting-ip.
+      ipAddress: {
+        ipAddressHeaders: ['cf-connecting-ip'],
+      },
+      ...(cookieDomain
+        ? {
             defaultCookieAttributes: {
               domain: cookieDomain,
               sameSite: 'lax' as const,
@@ -227,9 +233,9 @@ export function createAuth({
                 },
               },
             },
-          },
-        }
-      : {}),
+          }
+        : {}),
+    },
   });
 }
 
