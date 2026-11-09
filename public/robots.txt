@@ -1,0 +1,3 @@
+# Sitemap for search engines. Cloudflare merges this file with its
+# managed robots.txt content (AI crawler rules) at the edge.
+Sitemap: https://finnoybu.com/sitemap-index.xml
