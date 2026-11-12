@@ -122,4 +122,15 @@ export const PROJECTS: Project[] = [
       "An HVAC contractor's marketing site — designed and developed end to end.",
     url: 'https://sturrockshvac.com',
   },
+  {
+    id: 'rosas',
+    name: 'Rosas Chimney Services',
+    monogram: 'RC',
+    tag: 'Web Design',
+    blurb:
+      'A marketing site for a family-owned, CSIA Certified chimney sweep in Front Royal, Virginia. Designed and built end to end, then handed to the owners to run.',
+    details:
+      'Rosas Chimney Services is a family-owned, CSIA Certified chimney sweep based in Front Royal, Virginia. I designed and built their site end to end: home, services, about, and contact pages, plus a service-area hub with a page for each of the nine counties and thirty-two towns they cover. It is plain HTML, CSS, and JavaScript with no framework and nothing to build before hosting, so the owners can host and edit it themselves.',
+    url: 'https://rosaschimneyservices.com',
+  },
 ];
