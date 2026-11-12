@@ -17,9 +17,9 @@ const { projects } = Astro.props;
   >
     {/* ring band — back half (behind the portrait) */}
     <svg class="saturn-band is-back" id="bandBack" aria-hidden="true">
-      <ellipse class="band-glow"></ellipse>
-      <ellipse class="band-line--soft"></ellipse>
-      <ellipse class="band-line"></ellipse>
+      <ellipse class="band-glow" pathLength="1"></ellipse>
+      <ellipse class="band-line--soft" pathLength="1"></ellipse>
+      <ellipse class="band-line" pathLength="1"></ellipse>
     </svg>
 
     {/* the planet */}
@@ -44,9 +44,9 @@ const { projects } = Astro.props;
 
     {/* ring band — front half (clipped, in front of the portrait) */}
     <svg class="saturn-band is-front" id="bandFront" aria-hidden="true">
-      <ellipse class="band-glow"></ellipse>
-      <ellipse class="band-line--soft"></ellipse>
-      <ellipse class="band-line"></ellipse>
+      <ellipse class="band-glow" pathLength="1"></ellipse>
+      <ellipse class="band-line--soft" pathLength="1"></ellipse>
+      <ellipse class="band-line" pathLength="1"></ellipse>
     </svg>
 
     {/* icons riding the ring */}
@@ -60,6 +60,7 @@ const { projects } = Astro.props;
           data-blurb={p.blurb}
           data-details={p.details ?? ''}
           data-url={p.url ?? ''}
+          data-monogram={p.monogram}
         >
           <div class="saturn-node__disc">{p.monogram}</div>
           <div class="saturn-node__label">{p.name}</div>
@@ -79,6 +80,7 @@ const { projects } = Astro.props;
     <button class="project-detail__back" id="detailBack" type="button">
       &larr;&nbsp;Back to the system
     </button>
+    <div class="project-detail__mark" id="pdMark" aria-hidden="true"></div>
     <p class="project-detail__tag" id="pdTag"></p>
     <h2 class="project-detail__name" id="pdName"></h2>
     <div class="project-detail__body" id="pdBody"></div>
@@ -89,6 +91,14 @@ const { projects } = Astro.props;
       rel="noopener"
     ></a>
   </div>
+
+  {/* stand-in disc that flies between the ring and the detail view */}
+  <div
+    class="project-detail__mark is-ghost"
+    id="flightGhost"
+    aria-hidden="true"
+    hidden
+  ></div>
 </div>
 
 {/* Static fallback — reduced-motion, narrow screens, no-JS. */}
@@ -104,6 +114,7 @@ const { projects } = Astro.props;
   </div>
 </div>
 
+
 <script>
   const scene = document.getElementById('saturnScene');
   const orbit = document.getElementById('saturnOrbit');
@@ -116,40 +127,88 @@ const { projects } = Astro.props;
   const stage = document.querySelector<HTMLElement>('.saturn-stage-wrap');
   const projectDetail = document.getElementById('projectDetail');
   const detailBack = document.getElementById('detailBack');
+  const pdMark = document.getElementById('pdMark');
   const pdTag = document.getElementById('pdTag');
   const pdName = document.getElementById('pdName');
   const pdBody = document.getElementById('pdBody');
   const pdVisit = document.getElementById('pdVisit');
+  const ghost = document.getElementById('flightGhost');
 
   if (
     scene && orbit && bandBack && bandFront &&
     detail && dTag && dName && dBlurb &&
-    stage && projectDetail && detailBack &&
-    pdTag && pdName && pdBody && pdVisit
+    stage && projectDetail && detailBack && pdMark &&
+    pdTag && pdName && pdBody && pdVisit && ghost
   ) {
     const nodes = Array.from(
       orbit.querySelectorAll<HTMLElement>('.saturn-node'),
     );
+    const bandEllipses = [
+      ...bandBack.querySelectorAll('ellipse'),
+      ...bandFront.querySelectorAll('ellipse'),
+    ];
     const N = nodes.length;
     const TAU = Math.PI * 2;
     const TILT_DEG = -23; // ring tilt — like Saturn's actual ring
-    const TILT = (TILT_DEG * Math.PI) / 180;
-    const cosT = Math.cos(TILT);
-    const sinT = Math.sin(TILT);
+    const RY_RATIO = 0.34; // ring's vertical squash
     const reduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
+    const finePointer = window.matchMedia('(pointer: fine)').matches;
 
-    let cx = 0, cy = 0, rx = 0, ry = 0;
+    const clamp = (v: number, lo: number, hi: number) =>
+      Math.min(hi, Math.max(lo, v));
+    const easeOut = (t: number) => 1 - (1 - t) ** 3;
+
+    let cx = 0, cy = 0, rx = 0;
     let spin = Math.PI / 2; // node 0 starts at front (bottom)
     let target: number | null = null;
     let dragging = false;
     let pointerInside = false;
     let startX = 0, startSpin = 0, moved = 0;
     let active = -1;
+    let detailOpen = false;
+
+    // cursor-driven tilt: current values ease toward the goals each frame
+    let tiltDeg = TILT_DEG, tiltGoal = TILT_DEG;
+    let ryRatio = RY_RATIO, ryGoal = RY_RATIO;
+
+    const nodeX = new Array<number>(N).fill(0);
+    const nodeY = new Array<number>(N).fill(0);
+    const nodeScale = new Array<number>(N).fill(1);
+
+    // ── first-visit entrance ─────────────────────────────────
+    const INTRO_KEY = 'finnoybu:ring-intro-seen';
+    const INTRO_MS = 1700;
+    const STAGGER = Math.min(0.025, 0.3 / Math.max(N, 1));
+    let introStart: number | null = null; // -1 = waiting for first frame
+    if (!reduced) {
+      try {
+        if (!localStorage.getItem(INTRO_KEY)) {
+          introStart = -1;
+          localStorage.setItem(INTRO_KEY, '1');
+        }
+      } catch {
+        // storage unavailable — skip the entrance rather than replay it
+      }
+    }
+    const introK = new Array<number>(N).fill(introStart === null ? 1 : 0);
+
+    const setBandDraw = (k: number | null) => {
+      for (const el of bandEllipses) {
+        el.style.strokeDasharray = k === null ? '' : `${k} 1`;
+      }
+    };
+
+    const endIntro = () => {
+      if (introStart === null) return;
+      introStart = null;
+      introK.fill(1);
+      setBandDraw(null);
+    };
 
     const setEllipse = (
-      el: Element | null,
+      el: Element | undefined,
       ex: number, ey: number, erx: number, ery: number,
     ) => {
       if (!el) return;
@@ -159,16 +218,10 @@ const { projects } = Astro.props;
       el.setAttribute('ry', String(ery));
     };
 
-    const layout = () => {
-      const r = scene.getBoundingClientRect();
-      const W = r.width, H = r.height;
-      cx = W / 2;
-      cy = H / 2;
-      rx = Math.min(W * 0.42, 380);
-      ry = rx * 0.34;
+    const drawBands = () => {
+      const ry = rx * ryRatio;
       for (const svg of [bandBack, bandFront]) {
-        svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-        svg.style.transform = `rotate(${TILT_DEG}deg)`;
+        svg.style.transform = `rotate(${tiltDeg.toFixed(2)}deg)`;
         const e = svg.querySelectorAll('ellipse');
         setEllipse(e[0], cx, cy, rx, ry);
         setEllipse(e[1], cx, cy, rx * 0.82, ry * 0.82);
@@ -176,20 +229,39 @@ const { projects } = Astro.props;
       }
     };
 
+    const layout = () => {
+      const r = scene.getBoundingClientRect();
+      cx = r.width / 2;
+      cy = r.height / 2;
+      rx = Math.min(r.width * 0.42, 380);
+      for (const svg of [bandBack, bandFront]) {
+        svg.setAttribute('viewBox', `0 0 ${r.width} ${r.height}`);
+      }
+      drawBands();
+    };
+
     const place = () => {
+      const tilt = (tiltDeg * Math.PI) / 180;
+      const cosT = Math.cos(tilt);
+      const sinT = Math.sin(tilt);
+      const ry = rx * ryRatio;
       for (let i = 0; i < N; i++) {
-        const theta = (i / N) * TAU + spin;
-        // point on the un-tilted ellipse, then rotate by the ring tilt
-        const px = rx * Math.cos(theta);
-        const py = ry * Math.sin(theta);
+        const k = introK[i];
+        // during the entrance, nodes spiral out from the planet
+        const theta = (i / N) * TAU + spin + (1 - k) * 1.6;
+        const px = rx * k * Math.cos(theta);
+        const py = ry * k * Math.sin(theta);
         const x = cx + px * cosT - py * sinT;
         const y = cy + px * sinT + py * cosT;
         const depth = (Math.sin(theta) + 1) / 2; // 0 back .. 1 front
-        const scale = 0.62 + 0.46 * depth;
+        const scale = (0.62 + 0.46 * depth) * (0.35 + 0.65 * k);
+        nodeX[i] = x;
+        nodeY[i] = y;
+        nodeScale[i] = scale;
         const n = nodes[i];
         n.style.transform =
           `translate(calc(${x.toFixed(1)}px - 50%), calc(${y.toFixed(1)}px - 50%)) scale(${scale.toFixed(3)})`;
-        n.style.opacity = (0.4 + 0.6 * depth).toFixed(3);
+        n.style.opacity = ((0.4 + 0.6 * depth) * k).toFixed(3);
         n.style.zIndex = depth >= 0.5 ? '11' : '4';
       }
     };
@@ -224,8 +296,72 @@ const { projects } = Astro.props;
       target = t;
     };
 
+    const resetTilt = () => {
+      tiltGoal = TILT_DEG;
+      ryGoal = RY_RATIO;
+    };
+
+    // ── disc flight between ring and detail view ─────────────
+    // Spots come from layout offsets, not getBoundingClientRect, so the
+    // scene's open/close scale transition doesn't skew the measurements.
+    type Spot = { x: number; y: number; size: number };
+
+    const discSpot = (i: number): Spot => {
+      const n = nodes[i];
+      const disc = n.firstElementChild as HTMLElement;
+      const s = nodeScale[i];
+      return {
+        x: scene.offsetLeft + nodeX[i],
+        y: scene.offsetTop + nodeY[i] -
+          (n.offsetHeight / 2 - disc.offsetHeight / 2) * s,
+        size: disc.offsetWidth * s,
+      };
+    };
+
+    const markSpot = (): Spot => ({
+      x: projectDetail.offsetLeft + pdMark.offsetLeft + pdMark.offsetWidth / 2,
+      y: projectDetail.offsetTop + pdMark.offsetTop + pdMark.offsetHeight / 2 -
+        projectDetail.scrollTop,
+      size: pdMark.offsetWidth,
+    });
+
+    let flight: Animation | null = null;
+    let settleFlight: (() => void) | null = null;
+
+    const fly = (label: string, from: Spot, to: Spot, done: () => void) => {
+      if (flight) {
+        flight.cancel();
+        settleFlight?.();
+      }
+      ghost.textContent = label;
+      ghost.style.width = `${to.size}px`;
+      ghost.style.height = `${to.size}px`;
+      ghost.style.left = `${to.x - to.size / 2}px`;
+      ghost.style.top = `${to.y - to.size / 2}px`;
+      ghost.hidden = false;
+      const dx = from.x - to.x;
+      const dy = from.y - to.y;
+      const s = from.size / to.size;
+      settleFlight = () => {
+        ghost.hidden = true;
+        flight = null;
+        settleFlight = null;
+        done();
+      };
+      flight = ghost.animate(
+        [
+          { transform: `translate(${dx}px, ${dy}px) scale(${s})` },
+          { transform: 'none' },
+        ],
+        { duration: 560, easing: 'cubic-bezier(0.22, 0.8, 0.24, 1)' },
+      );
+      flight.onfinish = () => settleFlight?.();
+    };
+
     // ── project detail view ──────────────────────────────────
-    const openDetail = (node: HTMLElement) => {
+    const openDetail = (node: HTMLElement, i: number) => {
+      const label = node.dataset.monogram || '';
+      pdMark.textContent = label;
       pdTag.textContent = node.dataset.tag || '';
       pdName.textContent = node.dataset.name || '';
       pdBody.textContent =
@@ -243,18 +379,64 @@ const { projects } = Astro.props;
       } else {
         pdVisit.hidden = true;
       }
+      projectDetail.scrollTop = 0;
+      const from = discSpot(i);
+      detailOpen = true;
+      resetTilt();
       stage.classList.add('is-detail');
       projectDetail.setAttribute('aria-hidden', 'false');
+      if (!reduced) {
+        node.classList.add('is-flying');
+        pdMark.classList.add('is-waiting');
+        fly(label, from, markSpot(), () => {
+          pdMark.classList.remove('is-waiting');
+        });
+      }
       detailBack.focus();
     };
 
     const closeDetail = () => {
+      const i = active;
+      const node = nodes[i];
+      const from = markSpot();
       stage.classList.remove('is-detail');
       projectDetail.setAttribute('aria-hidden', 'true');
       scene.focus();
+      if (reduced) {
+        detailOpen = false;
+        return;
+      }
+      pdMark.classList.add('is-waiting');
+      fly(node.dataset.monogram || '', from, discSpot(i), () => {
+        node.classList.remove('is-flying');
+        pdMark.classList.remove('is-waiting');
+        detailOpen = false;
+      });
     };
 
-    const frame = () => {
+    const frame = (now: number) => {
+      if (introStart !== null) {
+        if (introStart < 0) introStart = now;
+        const t = (now - introStart) / INTRO_MS;
+        const bandK = easeOut(clamp(t / 0.55, 0, 1));
+        for (let i = 0; i < N; i++) {
+          introK[i] = easeOut(clamp((t - 0.2 - i * STAGGER) / 0.6, 0, 1));
+        }
+        setBandDraw(bandK);
+        if (bandK >= 1 && introK[N - 1] >= 1) endIntro();
+      }
+
+      const prevTilt = tiltDeg;
+      const prevRy = ryRatio;
+      tiltDeg += (tiltGoal - tiltDeg) * 0.06;
+      ryRatio += (ryGoal - ryRatio) * 0.06;
+      if (
+        Math.abs(tiltDeg - prevTilt) > 1e-4 ||
+        Math.abs(ryRatio - prevRy) > 1e-5
+      ) {
+        drawBands();
+      }
+
       if (dragging) {
         // spin updated by pointermove
       } else if (target !== null) {
@@ -263,7 +445,7 @@ const { projects } = Astro.props;
           spin = target;
           target = null;
         }
-      } else if (!pointerInside && !reduced) {
+      } else if (!pointerInside && !reduced && !detailOpen) {
         spin -= 0.0014; // idle drift — slow, reversed
       }
       place();
@@ -272,6 +454,7 @@ const { projects } = Astro.props;
     };
 
     layout();
+    if (introStart !== null) setBandDraw(0);
     place();
     refreshActive();
     requestAnimationFrame(frame);
@@ -282,12 +465,27 @@ const { projects } = Astro.props;
     });
 
     scene.addEventListener('pointerenter', () => { pointerInside = true; });
-    scene.addEventListener('pointerleave', () => { pointerInside = false; });
+    scene.addEventListener('pointerleave', () => {
+      pointerInside = false;
+      resetTilt();
+    });
+
+    if (finePointer && !reduced) {
+      scene.addEventListener('pointermove', (e) => {
+        if (detailOpen) return;
+        const r = scene.getBoundingClientRect();
+        const nx = clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1, 1);
+        const ny = clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1, 1);
+        tiltGoal = TILT_DEG + nx * 5;
+        ryGoal = RY_RATIO - ny * 0.07;
+      });
+    }
 
     // NB: no setPointerCapture — capturing the pointer on the scene steals
     // the `click` event from the icons. Drag moves are tracked on `window`
     // so a drag still works if the pointer leaves the scene.
     scene.addEventListener('pointerdown', (e) => {
+      endIntro();
       dragging = true;
       moved = 0;
       target = null;
@@ -312,7 +510,7 @@ const { projects } = Astro.props;
       node.addEventListener('click', () => {
         if (moved > 6) return; // was a drag
         if (i === active) {
-          openDetail(node);
+          openDetail(node, i);
         } else {
           snapTo(i);
         }
@@ -322,6 +520,7 @@ const { projects } = Astro.props;
     detailBack.addEventListener('click', closeDetail);
 
     scene.addEventListener('keydown', (e) => {
+      endIntro();
       if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault();
         snapTo(active + 1);

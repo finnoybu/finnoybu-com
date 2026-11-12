@@ -313,8 +313,15 @@ a { color: inherit; }
   border: 1px solid var(--rule);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   transition: background 0.35s ease, border-color 0.35s ease,
-    color 0.35s ease, box-shadow 0.35s ease;
+    color 0.35s ease, box-shadow 0.35s ease, transform 0.3s ease;
 }
+@media (hover: hover) {
+  .saturn-node:hover .saturn-node__disc {
+    transform: translateY(-4px) scale(1.06);
+    border-color: var(--accent);
+  }
+}
+.saturn-node.is-flying .saturn-node__disc { visibility: hidden; }
 .saturn-node__label {
   font-size: 0.72rem;
   letter-spacing: 0.03em;
@@ -380,11 +387,14 @@ a { color: inherit; }
 .saturn-stage-wrap .saturn-detail {
   transition: opacity 0.5s ease, transform 0.5s ease, filter 0.5s ease;
 }
-.saturn-stage-wrap.is-detail .saturn-scene,
+.saturn-stage-wrap.is-detail .saturn-scene {
+  opacity: 0.08;
+  transform: scale(1.12);
+  filter: blur(3px);
+  pointer-events: none;
+}
 .saturn-stage-wrap.is-detail .saturn-detail {
-  opacity: 0.12;
-  transform: scale(0.9);
-  filter: blur(2px);
+  opacity: 0;
   pointer-events: none;
 }
 
@@ -425,8 +435,32 @@ a { color: inherit; }
   border-color: var(--accent);
   color: var(--ink);
 }
+.project-detail__mark {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  margin-top: 1.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: 'Fraunces', serif;
+  font-size: 1.3rem;
+  color: var(--bg);
+  background: linear-gradient(150deg, var(--accent-hi), var(--accent));
+  border: 1px solid var(--accent-hi);
+  box-shadow: 0 12px 36px rgba(79, 147, 214, 0.55);
+}
+.project-detail__mark.is-waiting { visibility: hidden; }
+.project-detail__mark.is-ghost {
+  position: absolute;
+  margin: 0;
+  z-index: 30;
+  pointer-events: none;
+  will-change: transform;
+}
+.project-detail__mark.is-ghost[hidden] { display: none; }
 .project-detail__tag {
-  margin: 1.6rem 0 0;
+  margin: 1.1rem 0 0;
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.2em;
