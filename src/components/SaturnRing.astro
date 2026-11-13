@@ -6,6 +6,13 @@ interface Props {
 }
 
 const { projects } = Astro.props;
+
+const shortUrl = (url?: string) => {
+  if (!url) return '';
+  const u = new URL(url);
+  const host = u.hostname.replace(/^www\./, '');
+  return host === 'github.com' ? host + u.pathname : host;
+};
 ---
 <div class="saturn-stage-wrap">
   <div
@@ -61,11 +68,18 @@ const { projects } = Astro.props;
           data-details={p.details ?? ''}
           data-url={p.url ?? ''}
           data-monogram={p.monogram}
+          data-preview={p.preview ?? ''}
+          data-short-url={shortUrl(p.url)}
         >
           <div class="saturn-node__disc">{p.monogram}</div>
           <div class="saturn-node__label">{p.name}</div>
         </div>
       ))}
+    </div>
+
+    <div class="saturn-preview" id="saturnPreview" aria-hidden="true">
+      <img class="saturn-preview__img" id="previewImg" alt="" decoding="async" />
+      <p class="saturn-preview__url" id="previewUrl"></p>
     </div>
   </div>
 
@@ -133,12 +147,16 @@ const { projects } = Astro.props;
   const pdBody = document.getElementById('pdBody');
   const pdVisit = document.getElementById('pdVisit');
   const ghost = document.getElementById('flightGhost');
+  const preview = document.getElementById('saturnPreview');
+  const previewImg = document.querySelector<HTMLImageElement>('#previewImg');
+  const previewUrl = document.getElementById('previewUrl');
 
   if (
     scene && orbit && bandBack && bandFront &&
     detail && dTag && dName && dBlurb &&
     stage && projectDetail && detailBack && pdMark &&
-    pdTag && pdName && pdBody && pdVisit && ghost
+    pdTag && pdName && pdBody && pdVisit && ghost &&
+    preview && previewImg && previewUrl
   ) {
     const nodes = Array.from(
       orbit.querySelectorAll<HTMLElement>('.saturn-node'),
@@ -301,6 +319,51 @@ const { projects } = Astro.props;
       ryGoal = RY_RATIO;
     };
 
+    // ── hover preview card ───────────────────────────────────
+    let hovered = -1;
+    let previewsWarm = false;
+
+    const warmPreviews = () => {
+      if (previewsWarm) return;
+      previewsWarm = true;
+      for (const n of nodes) {
+        if (n.dataset.preview) new Image().src = n.dataset.preview;
+      }
+    };
+
+    // sits above the hovered disc; flips below it near the top of the scene
+    const placePreview = () => {
+      const n = nodes[hovered];
+      const s = nodeScale[hovered];
+      const cw = preview.offsetWidth;
+      const ch = preview.offsetHeight;
+      const discTop = nodeY[hovered] - (n.offsetHeight / 2) * s;
+      let top = discTop - ch - 12;
+      if (top < 0) top = nodeY[hovered] + (n.offsetHeight / 2) * s + 10;
+      const left = clamp(
+        nodeX[hovered] - cw / 2,
+        0,
+        scene.offsetWidth - cw,
+      );
+      preview.style.left = `${left.toFixed(1)}px`;
+      preview.style.top = `${top.toFixed(1)}px`;
+    };
+
+    const showPreview = (i: number) => {
+      const src = nodes[i].dataset.preview;
+      if (!src || dragging || detailOpen) return;
+      hovered = i;
+      if (previewImg.getAttribute('src') !== src) previewImg.src = src;
+      previewUrl.textContent = nodes[i].dataset.shortUrl || '';
+      placePreview();
+      preview.classList.add('is-visible');
+    };
+
+    const hidePreview = () => {
+      hovered = -1;
+      preview.classList.remove('is-visible');
+    };
+
     // ── disc flight between ring and detail view ─────────────
     // Spots come from layout offsets, not getBoundingClientRect, so the
     // scene's open/close scale transition doesn't skew the measurements.
@@ -381,6 +444,7 @@ const { projects } = Astro.props;
       }
       projectDetail.scrollTop = 0;
       const from = discSpot(i);
+      hidePreview();
       detailOpen = true;
       resetTilt();
       stage.classList.add('is-detail');
@@ -449,6 +513,7 @@ const { projects } = Astro.props;
         spin -= 0.0014; // idle drift — slow, reversed
       }
       place();
+      if (hovered >= 0) placePreview();
       refreshActive();
       requestAnimationFrame(frame);
     };
@@ -479,6 +544,12 @@ const { projects } = Astro.props;
         tiltGoal = TILT_DEG + nx * 5;
         ryGoal = RY_RATIO - ny * 0.07;
       });
+
+      scene.addEventListener('pointerenter', warmPreviews);
+      nodes.forEach((node, i) => {
+        node.addEventListener('pointerenter', () => showPreview(i));
+        node.addEventListener('pointerleave', hidePreview);
+      });
     }
 
     // NB: no setPointerCapture — capturing the pointer on the scene steals
@@ -486,6 +557,7 @@ const { projects } = Astro.props;
     // so a drag still works if the pointer leaves the scene.
     scene.addEventListener('pointerdown', (e) => {
       endIntro();
+      hidePreview();
       dragging = true;
       moved = 0;
       target = null;
