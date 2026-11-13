@@ -146,6 +146,7 @@ const shortUrl = (url?: string) => {
           <p class="fallback-card__name">{p.name}</p>
           <p class="fallback-card__pulse" data-pulse-for={p.id} hidden></p>
           <p class="fallback-card__blurb">{p.blurb}</p>
+          <p class="fallback-card__latest" data-latest-for={p.id} hidden></p>
         </div>
       </a>
     ))}
@@ -418,6 +419,13 @@ const shortUrl = (url?: string) => {
           el.textContent = pulseLabel(p);
           el.hidden = !el.textContent;
           el.classList.toggle('is-live', !!p?.live);
+        });
+      document
+        .querySelectorAll<HTMLElement>('.fallback-card__latest')
+        .forEach((el) => {
+          const latest = pulse[el.dataset.latestFor || '']?.latest;
+          el.textContent = latest ? `Latest: ${latest.title}` : '';
+          el.hidden = !latest;
         });
       if (hovered >= 0) showPreview(hovered);
     };
