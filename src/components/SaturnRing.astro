@@ -417,7 +417,7 @@ const shortUrl = (url?: string) => {
         const line = document.createElement('span');
         line.className = 'saturn-preview__latest';
         line.textContent = `Latest: ${p.latest.title}`;
-        previewPulse.append(line);
+        previewPulse.appendChild(line);
       }
       previewPulse.hidden = !status && !p?.latest;
       previewPulse.classList.toggle('is-live', !!p?.live);
