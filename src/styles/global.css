@@ -665,7 +665,21 @@ a { color: inherit; }
   letter-spacing: 0.02em;
   color: var(--ink-muted);
 }
-.fallback-card__pulse[hidden] { display: none; }
+.fallback-card__pulse[hidden],
+.fallback-card__latest[hidden] { display: none; }
+.fallback-card__latest {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  margin: 0.9rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
 .fallback-card__pulse.is-live::before {
   content: '';
   display: inline-block;
