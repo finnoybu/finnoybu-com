@@ -101,7 +101,7 @@ export const PROJECTS: Project[] = [
     tag: 'Civic',
     blurb:
       'Civic research and action — briefs that name the stakes, letters constituents can actually send, and a public record of how their representatives vote.',
-    url: 'https://github.com/finnoybu/americansforpropriety',
+    url: 'https://americansforpropriety.org',
     preview: '/previews/afp.webp',
   },
   {
