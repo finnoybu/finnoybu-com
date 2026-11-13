@@ -115,15 +115,6 @@ export const PROJECTS: Project[] = [
     preview: '/previews/mskosman.webp',
   },
   {
-    id: 'wilohwisp',
-    name: 'wilohwisp.com',
-    monogram: 'WW',
-    tag: 'Personal',
-    blurb:
-      'A small site, hand-built and held in trust for one specific person until they are ready for it.',
-    url: 'https://wilohwisp.com',
-  },
-  {
     id: 'sturrocks',
     name: "Sturrock's HVAC Solutions",
     monogram: 'SH',
