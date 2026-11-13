@@ -39,7 +39,8 @@ function authOptionsFromEnv(env: Env, baseUrl: string) {
 export const onRequest = defineMiddleware(async (ctx, next) => {
   ctx.locals.user = null;
 
-  if (ctx.isPrerendered) return next();
+  // /api/pulse is public, cookie-free data — skip the D1 session lookup.
+  if (ctx.isPrerendered || ctx.url.pathname === '/api/pulse') return next();
 
   const env = getEnv();
 

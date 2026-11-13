@@ -16,6 +16,7 @@
   --rule: #273349;
   --accent: #4f93d6;
   --accent-hi: #7fb6ec;
+  --live: #4ade80;
 }
 
 * { box-sizing: border-box; }
@@ -323,6 +324,48 @@ a { color: inherit; }
 }
 .saturn-node.is-flying .saturn-node__disc { visibility: hidden; }
 
+/* ── Signs of life (/api/pulse) ─────────────────────────────── */
+.saturn-node__disc { position: relative; }
+/* live site: a small steady beacon on the disc's shoulder */
+.saturn-node__disc::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--live);
+  box-shadow: 0 0 0 2px #131d30, 0 0 8px rgba(74, 222, 128, 0.7);
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.saturn-node.is-live .saturn-node__disc::after {
+  opacity: 1;
+  transform: none;
+}
+/* pushed this week: a slow breathing halo */
+.saturn-node__disc::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 1px solid var(--accent-hi);
+  opacity: 0;
+  pointer-events: none;
+}
+.saturn-node.is-busy .saturn-node__disc::before {
+  animation: pulse-halo 3.2s ease-out infinite;
+}
+@keyframes pulse-halo {
+  0% { opacity: 0.55; transform: scale(1); }
+  70%, 100% { opacity: 0; transform: scale(1.38); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .saturn-node.is-busy .saturn-node__disc::before { animation: none; }
+}
+
 /* ── Hover preview card ─────────────────────────────────────── */
 .saturn-preview {
   position: absolute;
@@ -364,6 +407,58 @@ a { color: inherit; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.saturn-preview__pulse {
+  margin: -0.2rem 0 0;
+  padding: 0 0.4rem 0.5rem;
+  font-size: 0.66rem;
+  color: var(--ink);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.saturn-preview__latest {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  margin-top: 0.2rem;
+  white-space: normal;
+  line-height: 1.35;
+  color: var(--ink-muted);
+}
+.saturn-preview__pulse[hidden],
+.project-detail__pulse[hidden],
+.project-detail__latest[hidden] { display: none; }
+.saturn-preview__pulse.is-live::before,
+.project-detail__pulse.is-live::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 0.4em;
+  border-radius: 50%;
+  vertical-align: 0.05em;
+  background: var(--live);
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.7);
+}
+.project-detail__pulse {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-muted);
+}
+.project-detail__latest {
+  display: inline-block;
+  margin-top: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 2px;
+}
+.project-detail__latest:hover { border-color: var(--accent-hi); }
 .saturn-node__label {
   font-size: 0.72rem;
   letter-spacing: 0.03em;
