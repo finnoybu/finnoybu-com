@@ -29,6 +29,9 @@ type Env = {
   AWS_REGION?: string;
   EMAIL_FROM?: string;
 
+  // Project-ring pulse: optional fine-grained read-only GitHub token (secret)
+  GITHUB_PULSE_TOKEN?: string;
+
   // Public
   PUBLIC_SITE_URL?: string;
 };

@@ -62,6 +62,7 @@ const shortUrl = (url?: string) => {
         <div
           class="saturn-node"
           data-index={i}
+          data-id={p.id}
           data-name={p.name}
           data-tag={p.tag}
           data-blurb={p.blurb}
@@ -80,6 +81,7 @@ const shortUrl = (url?: string) => {
     <div class="saturn-preview" id="saturnPreview" aria-hidden="true">
       <img class="saturn-preview__img" id="previewImg" alt="" decoding="async" />
       <p class="saturn-preview__url" id="previewUrl"></p>
+      <p class="saturn-preview__pulse" id="previewPulse" hidden></p>
     </div>
   </div>
 
@@ -97,7 +99,15 @@ const shortUrl = (url?: string) => {
     <div class="project-detail__mark" id="pdMark" aria-hidden="true"></div>
     <p class="project-detail__tag" id="pdTag"></p>
     <h2 class="project-detail__name" id="pdName"></h2>
+    <p class="project-detail__pulse" id="pdPulse" hidden></p>
     <div class="project-detail__body" id="pdBody"></div>
+    <a
+      class="project-detail__latest"
+      id="pdLatest"
+      target="_blank"
+      rel="noopener"
+      hidden
+    ></a>
     <a
       class="project-detail__visit"
       id="pdVisit"
@@ -150,13 +160,17 @@ const shortUrl = (url?: string) => {
   const preview = document.getElementById('saturnPreview');
   const previewImg = document.querySelector<HTMLImageElement>('#previewImg');
   const previewUrl = document.getElementById('previewUrl');
+  const previewPulse = document.getElementById('previewPulse');
+  const pdPulse = document.getElementById('pdPulse');
+  const pdLatest = document.getElementById('pdLatest');
 
   if (
     scene && orbit && bandBack && bandFront &&
     detail && dTag && dName && dBlurb &&
     stage && projectDetail && detailBack && pdMark &&
     pdTag && pdName && pdBody && pdVisit && ghost &&
-    preview && previewImg && previewUrl
+    preview && previewImg && previewUrl &&
+    previewPulse && pdPulse && pdLatest
   ) {
     const nodes = Array.from(
       orbit.querySelectorAll<HTMLElement>('.saturn-node'),
@@ -349,12 +363,64 @@ const shortUrl = (url?: string) => {
       preview.style.top = `${top.toFixed(1)}px`;
     };
 
+    // ── signs of life (/api/pulse) ───────────────────────────
+    // The route only ever reports good news, so absence means "say nothing".
+    type PulseInfo = {
+      live?: boolean;
+      days?: number;
+      latest?: { title: string; url: string };
+    };
+    let pulse: Record<string, PulseInfo> = {};
+    const pulseFor = (i: number): PulseInfo | undefined =>
+      pulse[nodes[i].dataset.id || ''];
+    const pulseLabel = (p?: PulseInfo) => {
+      if (!p) return '';
+      const activity =
+        p.days === undefined ? ''
+        : p.days < 1 ? 'updated today'
+        : p.days <= 7 ? 'active this week'
+        : 'active this month';
+      const text = [p.live ? 'Live' : '', activity].filter(Boolean).join(' · ');
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    };
+    const loadPulse = async () => {
+      try {
+        const res = await fetch('/api/pulse');
+        if (!res.ok) return;
+        pulse = ((await res.json()) as { projects?: typeof pulse }).projects ?? {};
+      } catch {
+        return;
+      }
+      nodes.forEach((node, i) => {
+        const p = pulseFor(i);
+        node.classList.toggle('is-live', !!p?.live);
+        node.classList.toggle('is-busy', p?.days !== undefined && p.days <= 7);
+      });
+      if (hovered >= 0) showPreview(hovered);
+    };
+    const idle = (window as Window & {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void;
+    }).requestIdleCallback;
+    if (idle) idle(() => void loadPulse(), { timeout: 2500 });
+    else setTimeout(() => void loadPulse(), 1200);
+
     const showPreview = (i: number) => {
       const src = nodes[i].dataset.preview;
       if (!src || dragging || detailOpen) return;
       hovered = i;
       if (previewImg.getAttribute('src') !== src) previewImg.src = src;
       previewUrl.textContent = nodes[i].dataset.shortUrl || '';
+      const p = pulseFor(i);
+      const status = pulseLabel(p);
+      previewPulse.textContent = status;
+      if (p?.latest) {
+        const line = document.createElement('span');
+        line.className = 'saturn-preview__latest';
+        line.textContent = `Latest: ${p.latest.title}`;
+        previewPulse.append(line);
+      }
+      previewPulse.hidden = !status && !p?.latest;
+      previewPulse.classList.toggle('is-live', !!p?.live);
       placePreview();
       preview.classList.add('is-visible');
     };
@@ -441,6 +507,17 @@ const shortUrl = (url?: string) => {
         pdVisit.hidden = false;
       } else {
         pdVisit.hidden = true;
+      }
+      const p = pulseFor(i);
+      pdPulse.textContent = pulseLabel(p);
+      pdPulse.hidden = !pdPulse.textContent;
+      pdPulse.classList.toggle('is-live', !!p?.live);
+      if (p?.latest) {
+        pdLatest.setAttribute('href', p.latest.url);
+        pdLatest.textContent = `Latest: ${p.latest.title}  →`;
+        pdLatest.hidden = false;
+      } else {
+        pdLatest.hidden = true;
       }
       projectDetail.scrollTop = 0;
       const from = discSpot(i);
