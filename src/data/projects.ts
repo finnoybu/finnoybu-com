@@ -10,6 +10,7 @@ export interface Project {
   blurb: string; // one-liner shown on the ring's detail panel
   details?: string; // longer write-up shown in the project detail view
   url?: string;
+  preview?: string; // hover-card image, ~1.9:1 (social-preview shape)
 }
 
 export const PROJECTS: Project[] = [
@@ -23,6 +24,7 @@ export const PROJECTS: Project[] = [
     details:
       'AEGIS is a governance architecture for constrained intelligence — a system that evaluates human intent, clarifies the consequences of a requested action, and enforces explicit boundaries before an AI agent is allowed to act. It treats authority, constraint, and consequence-awareness as first-class architectural properties rather than safeguards bolted on afterward; the working principle is that capability without constraint is not intelligence. The initiative spans a twelve-repository ecosystem — the AGP-1 governance runtime, the ATX-1 threat taxonomy, published specifications and position papers, and a hosted operator platform with a live demo. Reference releases carry DOIs, and the protocol RFCs and adversarial-evaluation program are active work.',
     url: 'https://aegis-initiative.com',
+    preview: '/previews/aegis.webp',
   },
   {
     id: 'reminiscences',
@@ -34,6 +36,7 @@ export const PROJECTS: Project[] = [
     details:
       "A Sailor's Reminiscences is the memoir of Olavus Vullum Bjørnson Vestbø (1859–1940), who left Norway as a boy and spent his youth aboard the merchant sailships. Olavus was my great-great-grandfather. I received a copy of his memoirs in 1999, after I was reunited with my birth family thirty-three years on from being adopted. The manuscript had been translated from Norwegian decades earlier and hand-copied more than once along the way, so bringing it back to life — transcribed, edited, and published where anyone can read it — took the better part of twenty years. Sixty-eight chapters, and finally finished.",
     url: 'https://memoirs.finnoybu.com',
+    preview: '/previews/reminiscences.webp',
   },
   {
     id: 'trilogy',
@@ -45,6 +48,7 @@ export const PROJECTS: Project[] = [
     details:
       'The Finnoybu Trilogy is a three-book Norse fantasy series, written under the pen name E. A. Westbo. Book I, Salt and Silence, and Book II, The Long Return, are complete and readable in full at fiction.finnoybu.com. Book III, Drawer of Vows, is drafted.',
     url: 'https://fiction.finnoybu.com',
+    preview: '/previews/trilogy.webp',
   },
   {
     id: 'press',
@@ -56,6 +60,7 @@ export const PROJECTS: Project[] = [
     details:
       'FINNOYBU Press is a publishing imprint built on a simple idea: the tools reshaping how people work deserve clear, practical guides written for the people actually using them. Its catalog covers the current generation of AI systems — ChatGPT, Claude, Gemini, Copilot, Perplexity, DeepSeek, Cursor, OpenClaw, NotebookLM — alongside an AI Systems Playbook that ties them together, fifteen titles and counting. Every guide is hands-on rather than theoretical, and the storefront runs at press.finnoybu.org.',
     url: 'https://press.finnoybu.org',
+    preview: '/previews/press.webp',
   },
   {
     id: 'claude-io',
@@ -65,6 +70,7 @@ export const PROJECTS: Project[] = [
     blurb:
       'Voice and vision I/O helpers for developers building with Claude. Speak to Claude, have it speak back, show it things.',
     url: 'https://github.com/finnoybu/claude-io',
+    preview: '/previews/claude-io.webp',
   },
   {
     id: 'dive',
@@ -76,6 +82,7 @@ export const PROJECTS: Project[] = [
     details:
       "DIVE — the Domain Integrity Verification Engine — checks that a domain's infrastructure still is what it's supposed to be. It captures deterministic snapshots of a domain's RDAP registration, DNS records, and TLS certificates, keeps a bounded history of them, and diffs consecutive snapshots to grade every change as stable, drift, risk, or critical. It wasn't planned: a system-administration tool once did this kind of watching, but it quietly went dark years ago. DIVE grew on its own while I was centralizing what I knew about my own domains — it became a tool because the need was there, not because I set out to build one. Determinism is the point: the same inputs always produce the same verdict, so the monitor itself can be trusted.",
     url: 'https://github.com/finnoybu/domain-integrity-verification-engine',
+    preview: '/previews/dive.webp',
   },
   {
     id: 'forensickle',
@@ -85,6 +92,7 @@ export const PROJECTS: Project[] = [
     blurb:
       'Investigative tooling for structured digital-forensics workflows — script-driven local collection that extends toward correlated multi-system analysis.',
     url: 'https://github.com/finnoybu/forensickle',
+    preview: '/previews/forensickle.webp',
   },
   {
     id: 'afp',
@@ -94,6 +102,7 @@ export const PROJECTS: Project[] = [
     blurb:
       'Civic research and action — briefs that name the stakes, letters constituents can actually send, and a public record of how their representatives vote.',
     url: 'https://github.com/finnoybu/americansforpropriety',
+    preview: '/previews/afp.webp',
   },
   {
     id: 'mskosman',
@@ -103,6 +112,7 @@ export const PROJECTS: Project[] = [
     blurb:
       "Homeschool, tutoring, and extracurricular lesson plans aligned to Virginia's K–12 Standards of Learning.",
     url: 'https://mskosman.com',
+    preview: '/previews/mskosman.webp',
   },
   {
     id: 'wilohwisp',
@@ -121,6 +131,7 @@ export const PROJECTS: Project[] = [
     blurb:
       "An HVAC contractor's marketing site — designed and developed end to end.",
     url: 'https://sturrockshvac.com',
+    preview: '/previews/sturrocks.webp',
   },
   {
     id: 'rosas',
@@ -132,5 +143,6 @@ export const PROJECTS: Project[] = [
     details:
       'Rosas Chimney Services is a family-owned, CSIA Certified chimney sweep based in Front Royal, Virginia. I designed and built their site end to end: home, services, about, and contact pages, plus a service-area hub with a page for each of the nine counties and thirty-two towns they cover. It is plain HTML, CSS, and JavaScript with no framework and nothing to build before hosting, so the owners can host and edit it themselves.',
     url: 'https://rosaschimneyservices.com',
+    preview: '/previews/rosas.webp',
   },
 ];

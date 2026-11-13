@@ -322,6 +322,48 @@ a { color: inherit; }
   }
 }
 .saturn-node.is-flying .saturn-node__disc { visibility: hidden; }
+
+/* ── Hover preview card ─────────────────────────────────────── */
+.saturn-preview {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 20;
+  width: 240px;
+  padding: 6px 6px 0;
+  border-radius: 12px;
+  background: rgba(15, 23, 38, 0.92);
+  border: 1px solid rgba(127, 182, 236, 0.28);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6), 0 0 32px rgba(79, 147, 214, 0.18);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transform-origin: 50% 100%;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.saturn-preview.is-visible {
+  opacity: 1;
+  transform: none;
+}
+.saturn-preview__img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 640 / 336;
+  object-fit: cover;
+  border-radius: 7px;
+  background: #131d30;
+}
+.saturn-preview__url {
+  margin: 0;
+  padding: 0.4rem 0.2rem 0.45rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .saturn-node__label {
   font-size: 0.72rem;
   letter-spacing: 0.03em;
