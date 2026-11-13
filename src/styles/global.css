@@ -644,12 +644,39 @@ a { color: inherit; }
 }
 .fallback-card {
   background: var(--bg);
-  padding: 1.5rem 1.6rem;
   text-decoration: none;
   display: block;
   transition: background 0.2s ease;
 }
 .fallback-card:hover { background: var(--bg-elev); }
+.fallback-card__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 640 / 336;
+  object-fit: cover;
+  background: #131d30;
+  border-bottom: 1px solid var(--rule);
+}
+.fallback-card__body { padding: 1.3rem 1.6rem 1.5rem; }
+.fallback-card__pulse {
+  margin: -0.15rem 0 0.6rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-muted);
+}
+.fallback-card__pulse[hidden] { display: none; }
+.fallback-card__pulse.is-live::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 0.4em;
+  border-radius: 50%;
+  vertical-align: 0.05em;
+  background: var(--live);
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.7);
+}
 .fallback-card__tag {
   font-size: 0.62rem;
   font-weight: 600;

@@ -130,9 +130,23 @@ const shortUrl = (url?: string) => {
   <div class="fallback-grid__items">
     {projects.map((p) => (
       <a class="fallback-card" href={p.url ?? '#'}>
-        <p class="fallback-card__tag">{p.tag}</p>
-        <p class="fallback-card__name">{p.name}</p>
-        <p class="fallback-card__blurb">{p.blurb}</p>
+        {p.preview && (
+          <img
+            class="fallback-card__img"
+            src={p.preview}
+            alt=""
+            width="640"
+            height="336"
+            loading="lazy"
+            decoding="async"
+          />
+        )}
+        <div class="fallback-card__body">
+          <p class="fallback-card__tag">{p.tag}</p>
+          <p class="fallback-card__name">{p.name}</p>
+          <p class="fallback-card__pulse" data-pulse-for={p.id} hidden></p>
+          <p class="fallback-card__blurb">{p.blurb}</p>
+        </div>
       </a>
     ))}
   </div>
@@ -396,6 +410,15 @@ const shortUrl = (url?: string) => {
         node.classList.toggle('is-live', !!p?.live);
         node.classList.toggle('is-busy', p?.days !== undefined && p.days <= 7);
       });
+      // the static grid (phones, reduced motion) gets the status line too
+      document
+        .querySelectorAll<HTMLElement>('.fallback-card__pulse')
+        .forEach((el) => {
+          const p = pulse[el.dataset.pulseFor || ''];
+          el.textContent = pulseLabel(p);
+          el.hidden = !el.textContent;
+          el.classList.toggle('is-live', !!p?.live);
+        });
       if (hovered >= 0) showPreview(hovered);
     };
     const idle = (window as Window & {
